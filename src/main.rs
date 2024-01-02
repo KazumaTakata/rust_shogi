@@ -4,6 +4,7 @@ use std::{fs, str::FromStr};
 
 mod piece_type;
 mod position;
+mod board;
 
 #[derive(Debug)]
 struct CSAFile {
