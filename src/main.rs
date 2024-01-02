@@ -11,6 +11,18 @@ fn main() {
 
     board.pprint();
 
+    let board = board.move_koma(&csa_file.moves[0]);
+    board.pprint();
+
+ 
+    let board = board.move_koma(&csa_file.moves[1]);
+    board.pprint();
+
+ 
+    let board = board.move_koma(&csa_file.moves[2]);
+    board.pprint();
+
+
     // println!("{:#?}", csa_file)
 
     // let sample = 1;

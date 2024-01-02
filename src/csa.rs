@@ -10,7 +10,7 @@ pub struct CSAFile {
     version: Option<String>,
     sente: Option<String>,
     gote: Option<String>,
-    moves: Vec<board::Move>,
+    pub moves: Vec<board::Move>,
 }
 
 pub fn parse_csa_file() -> CSAFile {

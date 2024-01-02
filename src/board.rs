@@ -49,7 +49,31 @@ impl Board {
         }
     }
 
-    pub fn move_koma(&self) {}
+    pub fn move_koma(mut self, move_koma: &Move) -> Board {
+
+        match self.gote_board.get(&move_koma.prev_pos) {
+            Some(value) => {
+                let copied_value = value.clone();
+                self.gote_board.remove(&move_koma.prev_pos);
+                self.gote_board.insert(move_koma.next_pos.clone(), copied_value);
+                return self
+            }
+            _ => {}
+        }
+
+        match self.sente_board.get(&move_koma.prev_pos) {
+            Some(value) => {
+                let copied_value = value.clone();
+                self.sente_board.remove(&move_koma.prev_pos);
+                self.sente_board.insert(move_koma.next_pos.clone(), copied_value);
+                return self
+            }
+            _ => {
+            }
+        }
+
+        return self
+    }
 }
 
 pub fn initialize_board() -> Board {
@@ -88,10 +112,10 @@ pub fn initialize_board() -> Board {
 
     board
         .gote_board
-        .insert(position::Position::SQ_8B, piece_type::PieceType::Bishop);
+        .insert(position::Position::SQ_8B, piece_type::PieceType::Rook);
     board
         .gote_board
-        .insert(position::Position::SQ_2B, piece_type::PieceType::Rook);
+        .insert(position::Position::SQ_2B, piece_type::PieceType::Bishop);
 
     board
         .gote_board
