@@ -21,43 +21,6 @@ struct Move {
     piece_type: piece_type::PieceType,
 }
 
-#[derive(Debug)]
-struct Board {
-    sente_board: HashMap<position::Position, piece_type::PieceType>,
-    gote_board: HashMap<position::Position, piece_type::PieceType>,
-}
-
-fn initialize_board() -> Board {
-    let mut board = Board {
-        sente_board: HashMap::new(),
-        gote_board: HashMap::new(),
-    };
-
-    board.gote_board.insert(position::Position::SQ_1A, piece_type::PieceType::Lance);
-    board.gote_board.insert(position::Position::SQ_2A, piece_type::PieceType::Knight);
-    board.gote_board.insert(position::Position::SQ_3A, piece_type::PieceType::Silver);
-    board.gote_board.insert(position::Position::SQ_4A, piece_type::PieceType::Gold);
-    board.gote_board.insert(position::Position::SQ_5A, piece_type::PieceType::King);
-    board.gote_board.insert(position::Position::SQ_6A, piece_type::PieceType::Gold);
-    board.gote_board.insert(position::Position::SQ_7A, piece_type::PieceType::Silver);
-    board.gote_board.insert(position::Position::SQ_7A, piece_type::PieceType::Knight);
-    board.gote_board.insert(position::Position::SQ_7A, piece_type::PieceType::Lance);
-
-
-    board.sente_board.insert(position::Position::SQ_1I, piece_type::PieceType::Lance);
-    board.sente_board.insert(position::Position::SQ_2I, piece_type::PieceType::Knight);
-    board.sente_board.insert(position::Position::SQ_3I, piece_type::PieceType::Silver);
-    board.sente_board.insert(position::Position::SQ_4I, piece_type::PieceType::Gold);
-    board.sente_board.insert(position::Position::SQ_5I, piece_type::PieceType::King);
-    board.sente_board.insert(position::Position::SQ_6I, piece_type::PieceType::Gold);
-    board.sente_board.insert(position::Position::SQ_7I, piece_type::PieceType::Silver);
-    board.sente_board.insert(position::Position::SQ_7I, piece_type::PieceType::Knight);
-    board.sente_board.insert(position::Position::SQ_7I, piece_type::PieceType::Lance);
-
-
-    return board;
-}
-
 fn parse_csa_file() -> CSAFile {
     let data = fs::read_to_string("./sample.csa").expect("Unable to read file");
     let splitted_data = data.lines();
@@ -140,9 +103,11 @@ fn main() {
     let csa_file = parse_csa_file();
 
 
-    let board = initialize_board();
+    let board = board::initialize_board();
 
-    println!("{:#?}", csa_file)
+    board.pprint();
+
+    // println!("{:#?}", csa_file)
 
     // let sample = 1;
 
