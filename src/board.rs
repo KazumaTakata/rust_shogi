@@ -10,6 +10,13 @@ pub struct Board {
     gote_board: HashMap<position::Position, piece_type::PieceType>,
 }
 
+#[derive(Debug)]
+pub struct Move {
+    pub(crate) prev_pos: position::Position,
+    pub(crate) next_pos: position::Position,
+    pub(crate) piece_type: piece_type::PieceType,
+}
+
 impl Board {
     pub fn pprint(&self) {
         let mut position_string_vector: Vec<String> = Vec::new();
@@ -41,6 +48,8 @@ impl Board {
             print!("\n")
         }
     }
+
+    pub fn move_koma(&self) {}
 }
 
 pub fn initialize_board() -> Board {
