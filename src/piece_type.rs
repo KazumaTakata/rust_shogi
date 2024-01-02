@@ -1,5 +1,5 @@
+use std::fmt;
 use std::str::FromStr;
-
 
 #[derive(Debug)]
 pub enum PieceType {
@@ -40,6 +40,22 @@ impl FromStr for PieceType {
             "TO" => Ok(PieceType::ProPawn),
 
             _ => Err(()),
+        }
+    }
+}
+
+impl fmt::Display for PieceType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &PieceType::King => write!(f, "OU"),
+            &PieceType::Rook => write!(f, "HI"),
+            &PieceType::Bishop => write!(f, "KA"),
+            &PieceType::Gold => write!(f, "KI"),
+            &PieceType::Silver => write!(f, "GI"),
+            &PieceType::Knight => write!(f, "KE"),
+            &PieceType::Lance => write!(f, "KY"),
+            &PieceType::Pawn => write!(f, "FU"),
+            _ => write!(f, "*"),
         }
     }
 }
