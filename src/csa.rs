@@ -4,13 +4,14 @@ use std::{fs, str::FromStr};
 use crate::board;
 use crate::piece_type;
 use crate::position;
+use crate::move_koma;
 
 #[derive(Debug)]
 pub struct CSAFile {
     version: Option<String>,
     sente: Option<String>,
     gote: Option<String>,
-    pub moves: Vec<board::Move>,
+    pub moves: Vec<move_koma::Move>,
 }
 
 pub fn parse_csa_file() -> CSAFile {
@@ -75,7 +76,7 @@ pub fn parse_csa_file() -> CSAFile {
 
                 let piece_type = &caps["piece_type"];
 
-                let koma_move = board::Move {
+                let koma_move = move_koma::Move {
                     prev_pos: prev_pos,
                     next_pos: next_pos,
                     piece_type: piece_type::PieceType::from_str(piece_type).unwrap(),

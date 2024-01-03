@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use crate::piece_type;
 use crate::position;
+use crate::move_koma;
 use candle_core::IndexOp;
 use candle_core::{DType, Device, Result, Tensor, D};
 
@@ -32,12 +33,7 @@ pub struct KomaDai {
     hi: i8,
 }
 
-#[derive(Debug)]
-pub struct Move {
-    pub(crate) prev_pos: position::Position,
-    pub(crate) next_pos: position::Position,
-    pub(crate) piece_type: piece_type::PieceType,
-}
+
 
 impl Board {
     pub fn pprint(&self) {
@@ -71,7 +67,7 @@ impl Board {
         }
     }
 
-    pub fn move_koma(mut self, move_koma: &Move) -> Board {
+    pub fn move_koma(mut self, move_koma: &move_koma::Move) -> Board {
         match self.gote_board.get(&move_koma.prev_pos) {
             Some(value) => {
                 let copied_value = value.clone();

@@ -3,6 +3,8 @@ mod csa;
 mod piece_type;
 mod position;
 mod neural;
+mod train;
+mod move_koma;
 
 fn main() {
     let csa_file = csa::parse_csa_file();
@@ -10,6 +12,8 @@ fn main() {
     let mut board = board::initialize_board();
 
     println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
+
+    
 
     // for next_move in csa_file.moves.iter() {
     //     board.pprint();
