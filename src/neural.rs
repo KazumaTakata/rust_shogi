@@ -20,6 +20,56 @@ use candle_nn::{loss, ops, Conv2d, Linear, Module, ModuleT, Optimizer, VarBuilde
 
 //         return F.relu(out + x)
 
+struct Resnet {
+    conv1: Conv2d,
+    bn1: batch_norm::BatchNorm,
+    block: ResnetBlock,
+    policy_conv: Conv2d,
+}
+
+
+impl Resnet {
+    fn new(vs: VarBuilder) -> Result<Self> {
+
+        let nextmove_size = 100;
+        let channel_size = 104
+
+        let conv1 = candle_nn::conv2d(
+            channel_size,
+            nextmove_size,
+            1,
+            Default::default(),
+            vs.pp("c1"),
+        )?;
+
+        let policy_conv = candle_nn::conv2d(
+            channel_size,
+            nextmove_size,
+            1,
+            Default::default(),
+            vs.pp("c1"),
+        )?;
+
+        let bn1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
+
+        let block = ResnetBlock::new(vs)?;
+
+        Ok(Self {
+            conv1,
+            bn1,
+            block,
+            policy_conv,
+        })
+    }
+
+    fn forward(&self, xs: &Tensor, train: bool) -> Result<Tensor> {
+        let ys = xs.apply(&self.conv1)?.apply_t(&self.bn1, train)?.relu()?.apply(&self.conv2)?.apply_t(&self.bn2, train)?;
+        let ys = (ys + xs)?.relu()?;
+        return Ok(ys);
+    }
+}
+
+
 struct ResnetBlock {
     conv1: Conv2d,
     bn1: batch_norm::BatchNorm,
@@ -57,8 +107,9 @@ impl ResnetBlock {
     }
 
     fn forward(&self, xs: &Tensor, train: bool) -> Result<Tensor> {
-        let xs = xs.apply(&self.conv1)?.apply(&self.conv2)?.relu()?;
-        return Ok(xs);
+        let ys = xs.apply(&self.conv1)?.apply_t(&self.bn1, train)?.relu()?.apply(&self.conv2)?.apply_t(&self.bn2, train)?;
+        let ys = (ys + xs)?.relu()?;
+        return Ok(ys);
     }
 }
 
