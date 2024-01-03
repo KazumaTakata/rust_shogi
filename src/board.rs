@@ -3,11 +3,25 @@ use std::str::FromStr;
 
 use crate::piece_type;
 use crate::position;
+use candle_core::{DType, Device, Result, Tensor, D};
 
 #[derive(Debug)]
 pub struct Board {
     sente_board: HashMap<position::Position, piece_type::PieceType>,
     gote_board: HashMap<position::Position, piece_type::PieceType>,
+    sente_komadai: KomaDai,
+}
+
+// hu, ky, ke, gi, ki, ka, hi
+#[derive(Debug)]
+pub struct KomaDai {
+    hu: i8,
+    ky: i8,
+    ke: i8,
+    gi: i8,
+    ki: i8,
+    ka: i8,
+    hi: i8,
 }
 
 #[derive(Debug)]
@@ -50,13 +64,13 @@ impl Board {
     }
 
     pub fn move_koma(mut self, move_koma: &Move) -> Board {
-
         match self.gote_board.get(&move_koma.prev_pos) {
             Some(value) => {
                 let copied_value = value.clone();
                 self.gote_board.remove(&move_koma.prev_pos);
-                self.gote_board.insert(move_koma.next_pos.clone(), copied_value);
-                return self
+                self.gote_board
+                    .insert(move_koma.next_pos.clone(), copied_value);
+                return self;
             }
             _ => {}
         }
@@ -65,14 +79,113 @@ impl Board {
             Some(value) => {
                 let copied_value = value.clone();
                 self.sente_board.remove(&move_koma.prev_pos);
-                self.sente_board.insert(move_koma.next_pos.clone(), copied_value);
-                return self
+                self.sente_board
+                    .insert(move_koma.next_pos.clone(), copied_value);
+                return self;
             }
-            _ => {
-            }
+            _ => {}
         }
 
-        return self
+        return self;
+    }
+
+    fn to_tensor_channel_index(&self, piece_type: &piece_type::PieceType) -> i32 {
+        // channel order
+        // on_board = 14
+        // hu, ky, ke, gi, ki, ka, hi, ou, pro_hu, pro_ky, pro_ke, pro_gi, pro_ka, pro_hi
+        // on komadai = 38
+        // hu * 18, ky * 4, ke * 4, gi * 4, ki * 4, ka * 2, Hi * 2
+
+        match piece_type {
+            piece_type::PieceType::Pawn => 0,
+            piece_type::PieceType::Lance => 1,
+            piece_type::PieceType::Knight => 2,
+            piece_type::PieceType::Silver => 3,
+            piece_type::PieceType::Gold => 4,
+            piece_type::PieceType::Bishop => 5,
+            piece_type::PieceType::Rook => 6,
+            piece_type::PieceType::King => 7,
+
+            piece_type::PieceType::ProPawn => 8,
+            piece_type::PieceType::ProLance => 9,
+            piece_type::PieceType::ProKnight => 10,
+            piece_type::PieceType::ProSilver => 11,
+            piece_type::PieceType::ProBishop => 12,
+            piece_type::PieceType::ProRook => 13,
+        }
+    }
+
+    pub fn to_tensor(&self) -> Tensor {
+        let mut input_tensor = Tensor::zeros((104, 9, 9), DType::F32, &Device::Cpu).unwrap();
+
+        let vec_size = 104 * 9 * 9;
+
+        // channel order
+        // on_board = 14
+        // hu, ky, ke, gi, ki, ka, hi, ou, pro_hu, pro_ky, pro_ke, pro_gi, pro_ka, pro_hi
+        // on komadai = 38
+        // hu * 18, ky * 4, ke * 4, gi * 4, ki * 4, ka * 2, Hi * 2
+
+        let mut zero_vec: Vec<i32> = Vec::with_capacity(vec_size as usize);
+
+        for (position, piece_type) in self.sente_board.iter() {
+            let (col, row) = position.to_tensor_index();
+
+            let channel_index = self.to_tensor_channel_index(piece_type);
+            let vector_index = 81 * channel_index + (col - 1) + (row - 1) * 9;
+
+            zero_vec[vector_index as usize] = 1
+        }
+
+        return input_tensor;
+    }
+
+    fn komadai_to_vector(&self) -> Tensor {
+        // # hu < 18
+        let mut hu_tensor: Tensor = Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
+
+        let in_komadai_list = [
+            (self.sente_komadai.hu, 18),
+            (self.sente_komadai.ky, 4),
+            (self.sente_komadai.ke, 4),
+            (self.sente_komadai.gi, 4),
+            (self.sente_komadai.ki, 4),
+            (self.sente_komadai.ka, 2),
+            (self.sente_komadai.hi, 2),
+        ];
+
+        for in_komadai in in_komadai_list {
+            for i in 0..in_komadai.1 {
+                if i == 0 {
+                    if i < in_komadai.0 {
+                        hu_tensor = Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
+                    } else {
+                        hu_tensor = Tensor::zeros((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
+                    }
+                } else {
+                    if i < in_komadai.0 {
+                        hu_tensor = Tensor::cat(
+                            &[
+                                &hu_tensor,
+                                &Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap(),
+                            ],
+                            0,
+                        )
+                        .unwrap();
+                    } else {
+                        hu_tensor = Tensor::cat(
+                            &[
+                                &hu_tensor,
+                                &Tensor::zeros((1, 9, 9), DType::F32, &Device::Cpu).unwrap(),
+                            ],
+                            0,
+                        )
+                        .unwrap();
+                    }
+                }
+            }
+        }
+        return hu_tensor;
     }
 }
 
@@ -80,6 +193,15 @@ pub fn initialize_board() -> Board {
     let mut board = Board {
         sente_board: HashMap::new(),
         gote_board: HashMap::new(),
+        sente_komadai: KomaDai {
+            hu: 0,
+            ky: 0,
+            ke: 0,
+            gi: 0,
+            ki: 0,
+            ka: 0,
+            hi: 0,
+        },
     };
 
     board

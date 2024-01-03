@@ -19,6 +19,7 @@ pub enum PieceType {
     ProPawn,
 }
 
+
 impl FromStr for PieceType {
     type Err = ();
 
