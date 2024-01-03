@@ -32,7 +32,7 @@ impl Resnet {
     fn new(vs: VarBuilder) -> Result<Self> {
 
         let nextmove_size = 100;
-        let channel_size = 104
+        let channel_size = 104;
 
         let conv1 = candle_nn::conv2d(
             channel_size,
@@ -63,8 +63,10 @@ impl Resnet {
     }
 
     fn forward(&self, xs: &Tensor, train: bool) -> Result<Tensor> {
-        let ys = xs.apply(&self.conv1)?.apply_t(&self.bn1, train)?.relu()?.apply(&self.conv2)?.apply_t(&self.bn2, train)?;
-        let ys = (ys + xs)?.relu()?;
+        let ys = xs.apply(&self.conv1)?.apply_t(&self.bn1, train)?.relu()?;
+        let ys = self.block.forward(&ys, train)?;
+        let ys = self.policy_conv.forward(&ys)?;
+        let ys = ys.flatten_all()?;
         return Ok(ys);
     }
 }
