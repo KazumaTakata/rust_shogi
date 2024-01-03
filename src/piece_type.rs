@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Debug, Clone) ]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PieceType {
     King,
     Rook,
@@ -19,6 +19,24 @@ pub enum PieceType {
     ProPawn,
 }
 
+impl PieceType {
+    pub fn is_promoted(&self) -> bool {
+        if [
+            PieceType::ProPawn,
+            PieceType::ProKnight,
+            PieceType::Lance,
+            PieceType::ProSilver,
+            PieceType::ProBishop,
+            PieceType::ProRook,
+        ]
+        .contains(self)
+        {
+            return true;
+        }
+
+        return false;
+    }
+}
 
 impl FromStr for PieceType {
     type Err = ();

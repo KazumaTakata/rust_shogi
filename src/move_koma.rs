@@ -1,9 +1,9 @@
+use candle_core::{DType, Device, Tensor};
 
 use crate::board;
+use crate::neural;
 use crate::piece_type;
 use crate::position;
-use crate::neural;
-
 
 #[derive(Debug)]
 pub struct Move {
@@ -12,15 +12,110 @@ pub struct Move {
     pub piece_type: piece_type::PieceType,
 }
 
-
 impl Move {
-    pub fn csa_move_to_move_direction(&self) -> MoveDirection {
+    fn to_label_tensor(&self) -> Tensor {
+        let (next_x, next_y) = self.next_pos.to_tensor_index();
+        let mut index = 20 * (next_x + next_y * 9);
 
+        let move_direction = self.csa_move_to_move_direction();
+        index = index + (move_direction as i32);
 
-        return MoveDirection::DOWN
+        let tensor = Tensor::zeros(81 * 20, DType::F32, &Device::Cpu).unwrap();
+
+        return tensor;
+
+    }
+
+    fn csa_move_to_move_direction(&self) -> MoveDirection {
+        let (next_x, next_y) = self.next_pos.to_tensor_index();
+        let (prev_x, prev_y) = self.prev_pos.to_tensor_index();
+
+        let diff_x = next_x - prev_x;
+        let diff_y = next_y - prev_y;
+
+        if diff_x == 0 && diff_y < 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::RightPromote;
+            }
+
+            return MoveDirection::RIGHT;
+        }
+
+        if diff_x == 0 && diff_y > 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::LeftPromote;
+            }
+
+            return MoveDirection::LEFT;
+        }
+
+        if diff_x > 0 && diff_y == 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::DownPromote;
+            }
+
+            return MoveDirection::DOWN;
+        }
+
+        if diff_x < 0 && diff_y == 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::UpPromote;
+            }
+
+            return MoveDirection::UP;
+        }
+
+        if diff_x < 0 && diff_y < 0 && diff_x == diff_y {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::UpRightPromote;
+            }
+
+            return MoveDirection::UpRight;
+        }
+
+        if diff_x > 0 && diff_y > 0 && diff_x == diff_y {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::DownLeftPromote;
+            }
+
+            return MoveDirection::DownLeft;
+        }
+
+        if diff_x < 0 && diff_y > 0 && diff_x == diff_y {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::DownRightPromote;
+            }
+
+            return MoveDirection::DownRight;
+        }
+
+        if diff_x > 0 && diff_y < 0 && diff_x == diff_y {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::UpLeftPromote;
+            }
+
+            return MoveDirection::UpLeft;
+        }
+
+        if diff_x == 1 && diff_y == -2 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::Up2LeftPromote;
+            }
+
+            return MoveDirection::Up2Left;
+        }
+
+        if diff_x == -1 && diff_y == -2 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::Up2RightPromote;
+            }
+
+            return MoveDirection::Up2Right;
+        }
+
+        return MoveDirection::DOWN;
     }
 }
-
 
 pub enum MoveDirection {
     UP = 0,
@@ -42,10 +137,8 @@ pub enum MoveDirection {
     DownLeftPromote,
     DownRightPromote,
     Up2LeftPromote,
-    Up2RightPromote
+    Up2RightPromote,
 }
-
-
 
 // # 移動方向を表す定数
 // MOVE_DIRECTION = [
