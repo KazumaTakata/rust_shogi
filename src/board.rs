@@ -116,9 +116,9 @@ impl Board {
     }
 
     pub fn to_tensor(&self) -> Tensor {
-        let mut input_tensor = Tensor::zeros((104, 9, 9), DType::F32, &Device::Cpu).unwrap();
+        let on_board_channel_size = 14;
 
-        let vec_size = 104 * 9 * 9;
+        let vec_size = on_board_channel_size * 9 * 9;
 
         // channel order
         // on_board = 14
@@ -126,7 +126,10 @@ impl Board {
         // on komadai = 38
         // hu * 18, ky * 4, ke * 4, gi * 4, ki * 4, ka * 2, Hi * 2
 
-        let mut zero_vec: Vec<i32> = Vec::with_capacity(vec_size as usize);
+        let mut zero_vec: Vec<f32> = Vec::with_capacity(vec_size as usize);
+        for i in 0..vec_size {
+            zero_vec.push(0.0);
+        }
 
         for (position, piece_type) in self.sente_board.iter() {
             let (col, row) = position.to_tensor_index();
@@ -134,13 +137,28 @@ impl Board {
             let channel_index = self.to_tensor_channel_index(piece_type);
             let vector_index = 81 * channel_index + (col - 1) + (row - 1) * 9;
 
-            zero_vec[vector_index as usize] = 1
+            zero_vec[vector_index as usize] = 1.0
         }
 
-        return input_tensor;
+        let komadai_tensor = self.komadai_to_tensor();
+        println!("tensor shape1: {:?}", komadai_tensor.shape().dims3());
+
+        let input_tensor =
+            Tensor::from_vec(zero_vec, (on_board_channel_size, 9, 9), &Device::Cpu).unwrap();
+
+        let sente_tensor = Tensor::cat(
+            &[
+                &input_tensor,
+                &komadai_tensor,
+            ],
+            0,
+        )
+        .unwrap();
+
+        return sente_tensor;
     }
 
-    fn komadai_to_vector(&self) -> Tensor {
+    fn komadai_to_tensor(&self) -> Tensor {
         // # hu < 18
         let mut hu_tensor: Tensor = Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
 
@@ -154,9 +172,12 @@ impl Board {
             (self.sente_komadai.hi, 2),
         ];
 
+        let mut j_flag = 0;
+
         for in_komadai in in_komadai_list {
             for i in 0..in_komadai.1 {
-                if i == 0 {
+                if i == 0 && j_flag == 0 {
+                    j_flag = 1;
                     if i < in_komadai.0 {
                         hu_tensor = Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
                     } else {

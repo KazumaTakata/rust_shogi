@@ -49,22 +49,24 @@ fn main() {
 
     let mut board = board::initialize_board();
 
-    for next_move in csa_file.moves.iter() {
-        board.pprint();
-        board = board.move_koma(&next_move);
-        println!("")
-    }
+    println!("tensor shape: {:?}", board.to_tensor().shape().dims3()); 
 
-    let input_tensor = Tensor::rand(-1.0f32, 1.0, (1, 1, 28, 28), &Device::Cpu).unwrap();
+    // for next_move in csa_file.moves.iter() {
+    //     board.pprint();
+    //     board = board.move_koma(&next_move);
+    //     println!("")
+    // }
+
+    // let input_tensor = Tensor::rand(-1.0f32, 1.0, (1, 1, 28, 28), &Device::Cpu).unwrap();
 
 
-    let mut varmap = VarMap::new();
-    let vs = VarBuilder::from_varmap(&varmap, DType::F32, &Device::Cpu);
-    let model = ConvNet::new(vs.clone()).unwrap();
+    // let mut varmap = VarMap::new();
+    // let vs = VarBuilder::from_varmap(&varmap, DType::F32, &Device::Cpu);
+    // let model = ConvNet::new(vs.clone()).unwrap();
 
-    let y = model.forward(&input_tensor, true);
+    // let y = model.forward(&input_tensor, true);
 
-    println!("{:?}", y);
+    // println!("{:?}", y);
 
     // println!("{:#?}", csa_file)
 
