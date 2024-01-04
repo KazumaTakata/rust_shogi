@@ -21,6 +21,8 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
 
     // println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
 
+    let mut debug_count = 0;
+
     for next_move in csa_file.moves.iter() {
 
         println!("{:?}", next_move);
@@ -29,15 +31,19 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
 
         let vector = label.to_vec1::<f32>().unwrap();
 
-        println!("{:?}", &vector[1377]);
-
         // println!("label: {:?}", label);
 
-        // label_tensors.push(label);
-
-        break;
+        label_tensors.push(label);
 
         let input_tensor = board.to_tensor();
+
+        debug_count = debug_count + 1;
+        if debug_count == 20 {
+            break
+        }
+
+        board.pprint_board(&input_tensor);
+
         input_tensors.push(input_tensor);
 
         // board.pprint();

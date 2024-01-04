@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use crate::move_koma;
 use crate::piece_type;
 use crate::position;
-use crate::move_koma;
 use candle_core::IndexOp;
 use candle_core::{DType, Device, Result, Tensor, D};
 
@@ -32,8 +32,6 @@ pub struct KomaDai {
     ka: i8,
     hi: i8,
 }
-
-
 
 impl Board {
     pub fn pprint(&self) {
@@ -72,6 +70,25 @@ impl Board {
             Some(value) => {
                 let copied_value = value.clone();
                 self.gote_board.remove(&move_koma.prev_pos);
+
+                //駒を取った時
+                match self.sente_board.get(&move_koma.next_pos) {
+                    Some(value) => {
+                        match value {
+                            &piece_type::PieceType::Bishop => self.gote_komadai.ka += 1,
+                            &piece_type::PieceType::Rook => self.gote_komadai.hi += 1,
+                            &piece_type::PieceType::Gold => self.gote_komadai.ki += 1,
+                            &piece_type::PieceType::Silver => self.gote_komadai.gi += 1,
+                            &piece_type::PieceType::Knight => self.gote_komadai.ke += 1,
+                            &piece_type::PieceType::Lance => self.gote_komadai.ky += 1,
+                            &piece_type::PieceType::Pawn => self.gote_komadai.hu += 1,
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+
+
                 self.gote_board
                     .insert(move_koma.next_pos.clone(), copied_value);
                 return self;
@@ -83,6 +100,25 @@ impl Board {
             Some(value) => {
                 let copied_value = value.clone();
                 self.sente_board.remove(&move_koma.prev_pos);
+
+                //駒を取った時
+                match self.gote_board.get(&move_koma.next_pos) {
+                    Some(value) => {
+                        match value {
+                            &piece_type::PieceType::Bishop => self.sente_komadai.ka += 1,
+                            &piece_type::PieceType::Rook => self.sente_komadai.hi += 1,
+                            &piece_type::PieceType::Gold => self.sente_komadai.ki += 1,
+                            &piece_type::PieceType::Silver => self.sente_komadai.gi += 1,
+                            &piece_type::PieceType::Knight => self.sente_komadai.ke += 1,
+                            &piece_type::PieceType::Lance => self.sente_komadai.ky += 1,
+                            &piece_type::PieceType::Pawn => self.sente_komadai.hu += 1,
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+
+
                 self.sente_board
                     .insert(move_koma.next_pos.clone(), copied_value);
                 return self;
@@ -137,6 +173,18 @@ impl Board {
         println!("tensor shape11: {:?}", tensor.shape().dims3());
 
         return tensor;
+    }
+
+    pub fn pprint_board(&self, input_tensor: &Tensor) {
+        let input_vector = input_tensor.to_vec3::<f32>().unwrap();
+        let pawn_vectors = &input_vector[0];
+
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
     }
 
     fn board_to_tensor(&self, teban: Teban) -> Tensor {
