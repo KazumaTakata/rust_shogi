@@ -87,7 +87,6 @@ impl Board {
         if move_koma.teban == Teban::Gote {
             match self.gote_board.get(&move_koma.prev_pos) {
                 Some(value) => {
-                    let copied_value = value.clone();
                     self.gote_board.remove(&move_koma.prev_pos);
 
                     //駒を取った時
@@ -104,6 +103,8 @@ impl Board {
                         },
                         _ => {}
                     }
+
+                    self.sente_board.remove(&move_koma.next_pos);
 
                     self.gote_board
                         .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());
@@ -149,7 +150,9 @@ impl Board {
                             _ => {}
                         },
                         _ => {}
-                    }
+                    };
+
+                    self.gote_board.remove(&move_koma.next_pos);
 
                     self.sente_board
                         .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());

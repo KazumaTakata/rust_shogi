@@ -44,9 +44,9 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
 
         input_tensors.push(input_tensor);
 
-        board.pprint();
-
         board = board.move_koma(&next_move);
+
+        board.pprint();
     }
 
     return (input_tensors, label_tensors);
