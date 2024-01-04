@@ -2,9 +2,9 @@ use regex::Regex;
 use std::{fs, str::FromStr};
 
 use crate::board;
+use crate::move_koma;
 use crate::piece_type;
 use crate::position;
-use crate::move_koma;
 
 #[derive(Debug)]
 pub struct CSAFile {
@@ -56,9 +56,10 @@ pub fn parse_csa_file() -> CSAFile {
             None => {}
         }
 
-        let move_re =
-            Regex::new(r"^[\+-](?P<prev_pos>\d{2})(?P<next_pos>\d{2})(?P<piece_type>[A-Z]{2})$")
-                .unwrap();
+        let move_re = Regex::new(
+            r"^(?P<teban>[\+-])(?P<prev_pos>\d{2})(?P<next_pos>\d{2})(?P<piece_type>[A-Z]{2})$",
+        )
+        .unwrap();
         match move_re.captures(line) {
             Some(caps) => {
                 let prev_pos_str = &caps["prev_pos"];
@@ -76,10 +77,17 @@ pub fn parse_csa_file() -> CSAFile {
 
                 let piece_type = &caps["piece_type"];
 
+                let teban = match &caps["teban"] {
+                    "+" => board::Teban::Sente,
+                    "-" => board::Teban::Gote,
+                    _ => board::Teban::Sente,
+                };
+
                 let koma_move = move_koma::Move {
                     prev_pos: prev_pos,
                     next_pos: next_pos,
                     piece_type: piece_type::PieceType::from_str(piece_type).unwrap(),
+                    teban: teban,
                 };
                 csa_file.moves.push(koma_move);
 

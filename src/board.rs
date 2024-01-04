@@ -66,15 +66,33 @@ impl Board {
     }
 
     pub fn move_koma(mut self, move_koma: &move_koma::Move) -> Board {
-        match self.gote_board.get(&move_koma.prev_pos) {
-            Some(value) => {
-                let copied_value = value.clone();
-                self.gote_board.remove(&move_koma.prev_pos);
+        if move_koma.prev_pos == position::Position::SQ_00 {
+            match move_koma.piece_type {
+                piece_type::PieceType::Bishop => self.gote_komadai.ka -= 1,
+                piece_type::PieceType::Rook => self.gote_komadai.hi -= 1,
+                piece_type::PieceType::Gold => self.gote_komadai.ki -= 1,
+                piece_type::PieceType::Silver => self.gote_komadai.gi -= 1,
+                piece_type::PieceType::Knight => self.gote_komadai.ke -= 1,
+                piece_type::PieceType::Lance => self.gote_komadai.ky -= 1,
+                piece_type::PieceType::Pawn => self.gote_komadai.hu -= 1,
+                _ => {}
+            }
+            let copied_value = move_koma.piece_type.clone();
+            self.gote_board
+                .insert(move_koma.next_pos.clone(), copied_value);
 
-                //駒を取った時
-                match self.sente_board.get(&move_koma.next_pos) {
-                    Some(value) => {
-                        match value {
+            return self;
+        }
+
+        if move_koma.teban == Teban::Gote {
+            match self.gote_board.get(&move_koma.prev_pos) {
+                Some(value) => {
+                    let copied_value = value.clone();
+                    self.gote_board.remove(&move_koma.prev_pos);
+
+                    //駒を取った時
+                    match self.sente_board.get(&move_koma.next_pos) {
+                        Some(value) => match value {
                             &piece_type::PieceType::Bishop => self.gote_komadai.ka += 1,
                             &piece_type::PieceType::Rook => self.gote_komadai.hi += 1,
                             &piece_type::PieceType::Gold => self.gote_komadai.ki += 1,
@@ -83,28 +101,45 @@ impl Board {
                             &piece_type::PieceType::Lance => self.gote_komadai.ky += 1,
                             &piece_type::PieceType::Pawn => self.gote_komadai.hu += 1,
                             _ => {}
-                        }
+                        },
+                        _ => {}
                     }
-                    _ => {}
+
+                    self.gote_board
+                        .insert(move_koma.next_pos.clone(), copied_value);
+                    return self;
                 }
-
-
-                self.gote_board
-                    .insert(move_koma.next_pos.clone(), copied_value);
-                return self;
+                _ => {}
             }
-            _ => {}
         }
 
-        match self.sente_board.get(&move_koma.prev_pos) {
-            Some(value) => {
-                let copied_value = value.clone();
-                self.sente_board.remove(&move_koma.prev_pos);
+        if move_koma.teban == Teban::Sente {
+            if move_koma.prev_pos == position::Position::SQ_00 {
+                match move_koma.piece_type {
+                    piece_type::PieceType::Bishop => self.sente_komadai.ka -= 1,
+                    piece_type::PieceType::Rook => self.sente_komadai.hi -= 1,
+                    piece_type::PieceType::Gold => self.sente_komadai.ki -= 1,
+                    piece_type::PieceType::Silver => self.sente_komadai.gi -= 1,
+                    piece_type::PieceType::Knight => self.sente_komadai.ke -= 1,
+                    piece_type::PieceType::Lance => self.sente_komadai.ky -= 1,
+                    piece_type::PieceType::Pawn => self.sente_komadai.hu -= 1,
+                    _ => {}
+                }
+                let copied_value = move_koma.piece_type.clone();
+                self.sente_board
+                    .insert(move_koma.next_pos.clone(), copied_value);
 
-                //駒を取った時
-                match self.gote_board.get(&move_koma.next_pos) {
-                    Some(value) => {
-                        match value {
+                return self;
+            }
+
+            match self.sente_board.get(&move_koma.prev_pos) {
+                Some(value) => {
+                    let copied_value = value.clone();
+                    self.sente_board.remove(&move_koma.prev_pos);
+
+                    //駒を取った時
+                    match self.gote_board.get(&move_koma.next_pos) {
+                        Some(value) => match value {
                             &piece_type::PieceType::Bishop => self.sente_komadai.ka += 1,
                             &piece_type::PieceType::Rook => self.sente_komadai.hi += 1,
                             &piece_type::PieceType::Gold => self.sente_komadai.ki += 1,
@@ -113,19 +148,17 @@ impl Board {
                             &piece_type::PieceType::Lance => self.sente_komadai.ky += 1,
                             &piece_type::PieceType::Pawn => self.sente_komadai.hu += 1,
                             _ => {}
-                        }
+                        },
+                        _ => {}
                     }
-                    _ => {}
+
+                    self.sente_board
+                        .insert(move_koma.next_pos.clone(), copied_value);
+                    return self;
                 }
-
-
-                self.sente_board
-                    .insert(move_koma.next_pos.clone(), copied_value);
-                return self;
+                _ => {}
             }
-            _ => {}
         }
-
         return self;
     }
 

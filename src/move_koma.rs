@@ -10,6 +10,7 @@ pub struct Move {
     pub prev_pos: position::Position,
     pub next_pos: position::Position,
     pub piece_type: piece_type::PieceType,
+    pub teban: board::Teban,
 }
 
 impl Move {
