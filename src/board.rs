@@ -79,7 +79,7 @@ impl Board {
             }
             let copied_value = move_koma.piece_type.clone();
             self.gote_board
-                .insert(move_koma.next_pos.clone(), copied_value);
+                .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());
 
             return self;
         }
@@ -106,7 +106,7 @@ impl Board {
                     }
 
                     self.gote_board
-                        .insert(move_koma.next_pos.clone(), copied_value);
+                        .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());
                     return self;
                 }
                 _ => {}
@@ -134,7 +134,6 @@ impl Board {
 
             match self.sente_board.get(&move_koma.prev_pos) {
                 Some(value) => {
-                    let copied_value = value.clone();
                     self.sente_board.remove(&move_koma.prev_pos);
 
                     //駒を取った時
@@ -153,7 +152,7 @@ impl Board {
                     }
 
                     self.sente_board
-                        .insert(move_koma.next_pos.clone(), copied_value);
+                        .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());
                     return self;
                 }
                 _ => {}
