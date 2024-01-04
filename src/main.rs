@@ -7,11 +7,9 @@ mod train;
 mod move_koma;
 
 fn main() {
-    let csa_file = csa::parse_csa_file();
 
-    let mut board = board::initialize_board();
+    train::load_dataset();
 
-    println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
 
     
 

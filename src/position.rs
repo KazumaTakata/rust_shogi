@@ -88,7 +88,7 @@ pub enum Position {
 
 impl Position {
     pub fn to_tensor_index(&self) -> (i32, i32) {
-        match self {
+        return match self {
             Position::SQ_00 => (0, 0),
 
             Position::SQ_1A => (1, 1),
@@ -182,7 +182,6 @@ impl Position {
             Position::SQ_9I => (9, 9),
         };
 
-        return (1, 1);
     }
 }
 

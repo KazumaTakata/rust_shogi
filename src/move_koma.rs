@@ -15,9 +15,15 @@ pub struct Move {
 impl Move {
     pub fn to_label_tensor(&self) -> Tensor {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
-        let mut base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
 
-        let move_direction = self.csa_move_to_move_direction();
+        println!("{}, {}", next_x, next_y);
+
+        let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
+
+        let move_direction: MoveDirection = self.csa_move_to_move_direction();
+
+        println!("move_direction {:?}", &move_direction);
+
         let index = base_index + (move_direction as i32);
 
         let mut zero_vec: Vec<f32> = vec![0.0; 81 * 27];
@@ -50,21 +56,13 @@ impl Move {
 
         if diff_x == 0 && diff_y < 0 {
             if self.piece_type.is_promoted() {
-                return MoveDirection::RightPromote;
+                return MoveDirection::UpPromote;
             }
 
-            return MoveDirection::RIGHT;
+            return MoveDirection::UP;
         }
 
         if diff_x == 0 && diff_y > 0 {
-            if self.piece_type.is_promoted() {
-                return MoveDirection::LeftPromote;
-            }
-
-            return MoveDirection::LEFT;
-        }
-
-        if diff_x > 0 && diff_y == 0 {
             if self.piece_type.is_promoted() {
                 return MoveDirection::DownPromote;
             }
@@ -72,12 +70,20 @@ impl Move {
             return MoveDirection::DOWN;
         }
 
-        if diff_x < 0 && diff_y == 0 {
+        if diff_x > 0 && diff_y == 0 {
             if self.piece_type.is_promoted() {
-                return MoveDirection::UpPromote;
+                return MoveDirection::LeftPromote;
             }
 
-            return MoveDirection::UP;
+            return MoveDirection::LEFT;
+        }
+
+        if diff_x < 0 && diff_y == 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::RightPromote;
+            }
+
+            return MoveDirection::RIGHT;
         }
 
         if diff_x < 0 && diff_y < 0 && diff_x == diff_y {
@@ -132,6 +138,7 @@ impl Move {
     }
 }
 
+#[derive(Debug)]
 pub enum MoveDirection {
     UP = 0,
     UpLeft,
