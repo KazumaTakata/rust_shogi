@@ -13,22 +13,37 @@ pub struct Move {
 }
 
 impl Move {
-    fn to_label_tensor(&self) -> Tensor {
+    pub fn to_label_tensor(&self) -> Tensor {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
-        let mut index = 20 * (next_x + next_y * 9);
+        let mut base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
 
         let move_direction = self.csa_move_to_move_direction();
-        index = index + (move_direction as i32);
+        let index = base_index + (move_direction as i32);
 
-        let tensor = Tensor::zeros(81 * 20, DType::F32, &Device::Cpu).unwrap();
+        let mut zero_vec: Vec<f32> = vec![0.0; 81 * 27];
+        zero_vec[index as usize] = 1.0;
+
+        let tensor = Tensor::from_vec(zero_vec, 81 * 27, &Device::Cpu).unwrap();
 
         return tensor;
-
     }
 
     fn csa_move_to_move_direction(&self) -> MoveDirection {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
         let (prev_x, prev_y) = self.prev_pos.to_tensor_index();
+
+        if prev_x == 0 && prev_y == 0 {
+            match &self.piece_type {
+                piece_type::PieceType::Rook => MoveDirection::Rook,
+                piece_type::PieceType::Bishop => MoveDirection::Bishop,
+                piece_type::PieceType::Gold => MoveDirection::Gold,
+                piece_type::PieceType::Silver => MoveDirection::Silver,
+                piece_type::PieceType::Knight => MoveDirection::Knight,
+                piece_type::PieceType::Lance => MoveDirection::Lance,
+                piece_type::PieceType::Pawn => MoveDirection::Pawn,
+                _ => MoveDirection::Pawn,
+            };
+        };
 
         let diff_x = next_x - prev_x;
         let diff_y = next_y - prev_y;
@@ -138,6 +153,13 @@ pub enum MoveDirection {
     DownRightPromote,
     Up2LeftPromote,
     Up2RightPromote,
+    Rook,
+    Bishop,
+    Gold,
+    Silver,
+    Knight,
+    Lance,
+    Pawn,
 }
 
 // # 移動方向を表す定数

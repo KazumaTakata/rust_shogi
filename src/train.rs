@@ -6,19 +6,43 @@ use crate::board;
 use crate::piece_type;
 use crate::position;
 use crate::neural;
+use crate::csa;
 
+
+
+fn load_dataset()  -> (Vec<Tensor>, Vec<Tensor>) {
+
+    let mut label_tensors: Vec<Tensor> = Vec::new();
+    let mut input_tensors: Vec<Tensor> = Vec::new();
+
+
+    let csa_file = csa::parse_csa_file();
+    let mut board = board::initialize_board();
+
+    let input_tensor = board.to_tensor();
+
+    println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
+
+
+    for next_move in csa_file.moves.iter() {
+        let label = next_move.to_label_tensor();
+        label_tensors.push(label);
+
+        let input_tensor = board.to_tensor();
+        input_tensors.push(input_tensor);
+
+
+        board.pprint();
+        board = board.move_koma(&next_move);
+    }
+
+    return (input_tensors, label_tensors);
+
+    // let input_tensor = Tensor::rand(-1.0f32, 1.0, (1, 1, 28, 28), &Device::Cpu).unwrap();
+
+}
 
 
 pub fn train_neuralnet() {
-    let mut board = board::initialize_board();
-    let input_tensor = board.to_tensor();
-    println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
-
-    
-    let mut varmap = VarMap::new();
-    let vs = VarBuilder::from_varmap(&varmap, DType::F32, &Device::Cpu);
-    let model = neural::Resnet::new(vs).unwrap();
-    let y = model.forward(&input_tensor, true).unwrap();
-
-
+   
 }
