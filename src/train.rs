@@ -25,7 +25,7 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
 
     for next_move in csa_file.moves.iter() {
 
-        println!("{:?}", next_move);
+        println!("next move {:?}", next_move);
         let label = next_move.to_label_tensor();
 
 
@@ -38,15 +38,13 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
         let input_tensor = board.to_tensor();
 
         debug_count = debug_count + 1;
-        if debug_count == 20 {
-            break
-        }
 
-        board.pprint_board(&input_tensor);
+
+        // board.pprint_board(&input_tensor);
 
         input_tensors.push(input_tensor);
 
-        // board.pprint();
+        board.pprint();
 
         board = board.move_koma(&next_move);
     }

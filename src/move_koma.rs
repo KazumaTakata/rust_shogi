@@ -17,8 +17,6 @@ impl Move {
     pub fn to_label_tensor(&self) -> Tensor {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
 
-        println!("{}, {}", next_x, next_y);
-
         let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
 
         let move_direction: MoveDirection = self.csa_move_to_move_direction();
@@ -38,6 +36,9 @@ impl Move {
     fn csa_move_to_move_direction(&self) -> MoveDirection {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
         let (prev_x, prev_y) = self.prev_pos.to_tensor_index();
+
+        println!("next_x, next_y = {},{}", next_x, next_y);
+        println!("prev_x, prev_y = {},{}", prev_x, prev_y);
 
         if prev_x == 0 && prev_y == 0 {
             match &self.piece_type {
@@ -87,38 +88,6 @@ impl Move {
             return MoveDirection::RIGHT;
         }
 
-        if diff_x < 0 && diff_y < 0 && diff_x == diff_y {
-            if self.piece_type.is_promoted() {
-                return MoveDirection::UpRightPromote;
-            }
-
-            return MoveDirection::UpRight;
-        }
-
-        if diff_x > 0 && diff_y > 0 && diff_x == diff_y {
-            if self.piece_type.is_promoted() {
-                return MoveDirection::DownLeftPromote;
-            }
-
-            return MoveDirection::DownLeft;
-        }
-
-        if diff_x < 0 && diff_y > 0 && diff_x == diff_y {
-            if self.piece_type.is_promoted() {
-                return MoveDirection::DownRightPromote;
-            }
-
-            return MoveDirection::DownRight;
-        }
-
-        if diff_x > 0 && diff_y < 0 && diff_x == diff_y {
-            if self.piece_type.is_promoted() {
-                return MoveDirection::UpLeftPromote;
-            }
-
-            return MoveDirection::UpLeft;
-        }
-
         if diff_x == 1 && diff_y == -2 {
             if self.piece_type.is_promoted() {
                 return MoveDirection::Up2LeftPromote;
@@ -133,6 +102,38 @@ impl Move {
             }
 
             return MoveDirection::Up2Right;
+        }
+
+        if diff_x < 0 && diff_y < 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::UpRightPromote;
+            }
+
+            return MoveDirection::UpRight;
+        }
+
+        if diff_x > 0 && diff_y > 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::DownLeftPromote;
+            }
+
+            return MoveDirection::DownLeft;
+        }
+
+        if diff_x < 0 && diff_y > 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::DownRightPromote;
+            }
+
+            return MoveDirection::DownRight;
+        }
+
+        if diff_x > 0 && diff_y < 0 {
+            if self.piece_type.is_promoted() {
+                return MoveDirection::UpLeftPromote;
+            }
+
+            return MoveDirection::UpLeft;
         }
 
         return MoveDirection::DOWN;

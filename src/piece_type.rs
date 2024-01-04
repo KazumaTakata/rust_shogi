@@ -74,6 +74,12 @@ impl fmt::Display for PieceType {
             &PieceType::Knight => write!(f, "KE"),
             &PieceType::Lance => write!(f, "KY"),
             &PieceType::Pawn => write!(f, "FU"),
+            &PieceType::ProRook => write!(f, "RY"),
+            &PieceType::ProBishop => write!(f, "UM"),
+            &PieceType::ProSilver => write!(f, "NG"),
+            &PieceType::ProKnight => write!(f, "NK"),
+            &PieceType::ProLance => write!(f, "NY"),
+            &PieceType::ProPawn => write!(f, "TO"),
             _ => write!(f, "*"),
         }
     }
