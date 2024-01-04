@@ -63,6 +63,11 @@ impl Board {
             }
             print!("\n")
         }
+
+        println!("{:?}", self.sente_komadai);
+        println!("{:?}", self.gote_komadai);
+
+
     }
 
     pub fn move_koma(mut self, move_koma: &move_koma::Move) -> Board {
@@ -92,12 +97,25 @@ impl Board {
                     match self.sente_board.get(&move_koma.next_pos) {
                         Some(value) => match value {
                             &piece_type::PieceType::Bishop => self.gote_komadai.ka += 1,
+                            &piece_type::PieceType::ProBishop => self.gote_komadai.ka += 1,
+
                             &piece_type::PieceType::Rook => self.gote_komadai.hi += 1,
+                            &piece_type::PieceType::ProRook => self.gote_komadai.hi += 1,
+
                             &piece_type::PieceType::Gold => self.gote_komadai.ki += 1,
+ 
                             &piece_type::PieceType::Silver => self.gote_komadai.gi += 1,
+                            &piece_type::PieceType::ProSilver => self.gote_komadai.gi += 1,
+
                             &piece_type::PieceType::Knight => self.gote_komadai.ke += 1,
+                            &piece_type::PieceType::ProKnight => self.gote_komadai.ke += 1,
+
                             &piece_type::PieceType::Lance => self.gote_komadai.ky += 1,
+                            &piece_type::PieceType::ProLance => self.gote_komadai.ky += 1,
+
                             &piece_type::PieceType::Pawn => self.gote_komadai.hu += 1,
+                            &piece_type::PieceType::ProPawn => self.gote_komadai.hu += 1,
+
                             _ => {}
                         },
                         _ => {}
@@ -140,12 +158,26 @@ impl Board {
                     match self.gote_board.get(&move_koma.next_pos) {
                         Some(value) => match value {
                             &piece_type::PieceType::Bishop => self.sente_komadai.ka += 1,
+                            &piece_type::PieceType::ProBishop => self.sente_komadai.ka += 1,
+
                             &piece_type::PieceType::Rook => self.sente_komadai.hi += 1,
+                            &piece_type::PieceType::ProRook => self.sente_komadai.hi += 1,
+
                             &piece_type::PieceType::Gold => self.sente_komadai.ki += 1,
+ 
                             &piece_type::PieceType::Silver => self.sente_komadai.gi += 1,
+                            &piece_type::PieceType::ProSilver => self.sente_komadai.gi += 1,
+
                             &piece_type::PieceType::Knight => self.sente_komadai.ke += 1,
+                            &piece_type::PieceType::ProKnight => self.sente_komadai.ke += 1,
+
                             &piece_type::PieceType::Lance => self.sente_komadai.ky += 1,
+                            &piece_type::PieceType::ProLance => self.sente_komadai.ky += 1,
+
                             &piece_type::PieceType::Pawn => self.sente_komadai.hu += 1,
+                            &piece_type::PieceType::ProPawn => self.sente_komadai.hu += 1,
+
+
                             _ => {}
                         },
                         _ => {}
