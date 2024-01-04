@@ -41,7 +41,7 @@ impl Move {
         println!("prev_x, prev_y = {},{}", prev_x, prev_y);
 
         if prev_x == 0 && prev_y == 0 {
-            match &self.piece_type {
+            return match self.piece_type {
                 piece_type::PieceType::Rook => MoveDirection::Rook,
                 piece_type::PieceType::Bishop => MoveDirection::Bishop,
                 piece_type::PieceType::Gold => MoveDirection::Gold,

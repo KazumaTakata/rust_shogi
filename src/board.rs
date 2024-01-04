@@ -66,25 +66,24 @@ impl Board {
     }
 
     pub fn move_koma(mut self, move_koma: &move_koma::Move) -> Board {
-        if move_koma.prev_pos == position::Position::SQ_00 {
-            match move_koma.piece_type {
-                piece_type::PieceType::Bishop => self.gote_komadai.ka -= 1,
-                piece_type::PieceType::Rook => self.gote_komadai.hi -= 1,
-                piece_type::PieceType::Gold => self.gote_komadai.ki -= 1,
-                piece_type::PieceType::Silver => self.gote_komadai.gi -= 1,
-                piece_type::PieceType::Knight => self.gote_komadai.ke -= 1,
-                piece_type::PieceType::Lance => self.gote_komadai.ky -= 1,
-                piece_type::PieceType::Pawn => self.gote_komadai.hu -= 1,
-                _ => {}
-            }
-            let copied_value = move_koma.piece_type.clone();
-            self.gote_board
-                .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());
-
-            return self;
-        }
-
         if move_koma.teban == Teban::Gote {
+            if move_koma.prev_pos == position::Position::SQ_00 {
+                match move_koma.piece_type {
+                    piece_type::PieceType::Bishop => self.gote_komadai.ka -= 1,
+                    piece_type::PieceType::Rook => self.gote_komadai.hi -= 1,
+                    piece_type::PieceType::Gold => self.gote_komadai.ki -= 1,
+                    piece_type::PieceType::Silver => self.gote_komadai.gi -= 1,
+                    piece_type::PieceType::Knight => self.gote_komadai.ke -= 1,
+                    piece_type::PieceType::Lance => self.gote_komadai.ky -= 1,
+                    piece_type::PieceType::Pawn => self.gote_komadai.hu -= 1,
+                    _ => {}
+                }
+                let copied_value = move_koma.piece_type.clone();
+                self.gote_board
+                    .insert(move_koma.next_pos.clone(), move_koma.piece_type.clone());
+
+                return self;
+            }
             match self.gote_board.get(&move_koma.prev_pos) {
                 Some(value) => {
                     self.gote_board.remove(&move_koma.prev_pos);
