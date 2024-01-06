@@ -8,7 +8,9 @@ mod move_koma;
 
 fn main() {
 
-    train::load_dataset();
+    // train::load_dataset();
+
+    train::train_neuralnet();
 
 
     

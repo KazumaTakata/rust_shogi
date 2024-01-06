@@ -33,6 +33,25 @@ impl Move {
         return tensor;
     }
 
+    pub fn to_label_tensor_2(&self) -> Tensor {
+        let (next_x, next_y) = self.next_pos.to_tensor_index();
+
+        let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
+
+        let move_direction: MoveDirection = self.csa_move_to_move_direction();
+
+        println!("move_direction {:?}", &move_direction);
+
+        let index = base_index + (move_direction as i32);
+
+
+        let data: [u32; 1] = [index as u32];
+        let tensor = Tensor::new(&data, &Device::Cpu).unwrap();
+
+        return tensor;
+    }
+
+
     fn csa_move_to_move_direction(&self) -> MoveDirection {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
         let (prev_x, prev_y) = self.prev_pos.to_tensor_index();

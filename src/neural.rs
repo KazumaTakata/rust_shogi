@@ -16,7 +16,7 @@ impl Resnet {
     pub fn new(vs: VarBuilder) -> Result<Self> {
         let channel_size = 192;
         let input_channel_size = 104;
-        let move_channel_size = 2187;
+        let move_channel_size = 27;
 
         let conv1 = candle_nn::conv2d_no_bias(
             input_channel_size,
@@ -28,10 +28,10 @@ impl Resnet {
                 dilation: 1,
                 groups: 1,
             },
-            vs.pp("c1"),
+            vs.pp("resnet-c1"),
         )?;
 
-        let batch_norm1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
+        let batch_norm1 = batch_norm(channel_size, 1e-5, vs.pp("resnet-bn1"))?;
 
         let block = ResnetBlock::new(vs.clone(), channel_size)?;
         let block2 = ResnetBlock::new(vs.clone(), channel_size)?;
@@ -42,10 +42,10 @@ impl Resnet {
             move_channel_size,
             1,
             Default::default(),
-            vs.pp("c1"),
+            vs.pp("nesnet-policyconv"),
         )?;
 
-        let bias = Tensor::zeros(move_channel_size, DType::F32, &Device::Cpu)?;
+        let bias = Tensor::zeros(move_channel_size * 81, DType::F32, &Device::Cpu)?;
 
         Ok(Self {
             conv1,
@@ -65,12 +65,19 @@ impl Resnet {
             .relu()?;
 
         let ys = self.block.forward(&ys, train)?;
-        let ys = self.block2.forward(&ys, train)?;
-        let ys = self.block3.forward(&ys, train)?;
+
+        // let ys = self.block2.forward(&ys, train)?;
+        // let ys = self.block3.forward(&ys, train)?;
 
         let ys = self.policy_conv.forward(&ys)?;
+
+        
+
+
         let ys = ys.flatten_all()?;
+
         let ys = (ys + &self.bias)?;
+
         return Ok(ys);
     }
 }
@@ -94,9 +101,9 @@ impl ResnetBlock {
                 dilation: 1,
                 groups: 1,
             },
-            vs.pp("c1"),
+            vs.pp("resnetblock-c1"),
         )?;
-        let bn1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
+        let bn1 = batch_norm(channel_size, 1e-5, vs.pp("resnetblock-bn1"))?;
         let conv2 = candle_nn::conv2d_no_bias(
             channel_size,
             channel_size,
@@ -107,9 +114,9 @@ impl ResnetBlock {
                 dilation: 1,
                 groups: 1,
             },
-            vs.pp("c2"),
+            vs.pp("resnetblock-c2"),
         )?;
-        let bn2 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
+        let bn2 = batch_norm(channel_size, 1e-5, vs.pp("resnetblock-bn1"))?;
 
         Ok(Self {
             conv1,
