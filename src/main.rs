@@ -5,6 +5,7 @@ mod position;
 mod neural;
 mod train;
 mod move_koma;
+mod dataload;
 
 fn main() {
 
