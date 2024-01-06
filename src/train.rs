@@ -10,6 +10,8 @@ use crate::neural;
 use crate::piece_type;
 use crate::position;
 
+use std::io::{Read, stdin}; 
+
 pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
     let mut label_tensors: Vec<Tensor> = Vec::new();
     let mut input_tensors: Vec<Tensor> = Vec::new();
@@ -24,6 +26,12 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
     let mut debug_count = 0;
 
     for next_move in csa_file.moves.iter() {
+        let mut stdin_handle = stdin().lock();  
+        let mut byte = [0_u8];  
+        stdin_handle.read_exact(&mut byte).unwrap();  
+
+
+        print!("\x1B[2J\x1B[1;1H");
 
         println!("next move {:?}", next_move);
         let label = next_move.to_label_tensor();
@@ -35,17 +43,17 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
 
         label_tensors.push(label);
 
-        let input_tensor = board.to_tensor();
 
         debug_count = debug_count + 1;
 
 
-        // board.pprint_board(&input_tensor);
 
-        input_tensors.push(input_tensor);
 
         board = board.move_koma(&next_move);
 
+        let input_tensor = board.to_tensor();
+        board.pprint_board(&input_tensor);
+        input_tensors.push(input_tensor);
         board.pprint();
     }
 

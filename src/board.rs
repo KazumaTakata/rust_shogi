@@ -242,15 +242,89 @@ impl Board {
     }
 
     pub fn pprint_board(&self, input_tensor: &Tensor) {
+
+        // channel order
+        // on_board = 14
+        // hu, ky, ke, gi, ki, ka, hi, ou, pro_hu, pro_ky, pro_ke, pro_gi, pro_ka, pro_hi
+        // on komadai = 38
+        // hu * 18, ky * 4, ke * 4, gi * 4, ki * 4, ka * 2, Hi * 2
+
+        println!("先手:歩");
         let input_vector = input_tensor.to_vec3::<f32>().unwrap();
         let pawn_vectors = &input_vector[0];
 
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors {
+            for bit_value in row_vectors.iter().rev()  {
                 print!(" {} ", bit_value)
             }
             println!("");
         }
+        println!("");
+
+        println!("先手:香");
+        let pawn_vectors = &input_vector[1];
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors.iter().rev()  {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
+        println!("");
+
+        println!("先手:桂");
+        let pawn_vectors = &input_vector[2];
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors.iter().rev()  {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
+        println!("");
+
+        println!("先手:銀");
+        let pawn_vectors = &input_vector[3];
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors.iter().rev()  {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
+        println!("");
+
+
+        println!("先手:持歩1");
+        let pawn_vectors = &input_vector[14];
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors.iter().rev()  {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
+        println!("");
+
+        println!("先手:持歩2");
+        let pawn_vectors = &input_vector[15];
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors.iter().rev()  {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
+        println!("");
+
+        println!("先手:持歩3");
+        let pawn_vectors = &input_vector[16];
+        for row_vectors in pawn_vectors {
+            for bit_value in row_vectors.iter().rev()  {
+                print!(" {} ", bit_value)
+            }
+            println!("");
+        }
+        println!("");
+
+
+
+
     }
 
     fn board_to_tensor(&self, teban: Teban) -> Tensor {
