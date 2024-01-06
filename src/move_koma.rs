@@ -21,7 +21,7 @@ impl Move {
 
         let move_direction: MoveDirection = self.csa_move_to_move_direction();
 
-        println!("move_direction {:?}", &move_direction);
+        // println!("move_direction {:?}", &move_direction);
 
         let index = base_index + (move_direction as i32);
 
@@ -40,7 +40,7 @@ impl Move {
 
         let move_direction: MoveDirection = self.csa_move_to_move_direction();
 
-        println!("move_direction {:?}", &move_direction);
+        // println!("move_direction {:?}", &move_direction);
 
         let index = base_index + (move_direction as i32);
 
@@ -56,8 +56,8 @@ impl Move {
         let (next_x, next_y) = self.next_pos.to_tensor_index();
         let (prev_x, prev_y) = self.prev_pos.to_tensor_index();
 
-        println!("next_x, next_y = {},{}", next_x, next_y);
-        println!("prev_x, prev_y = {},{}", prev_x, prev_y);
+        // println!("next_x, next_y = {},{}", next_x, next_y);
+        // println!("prev_x, prev_y = {},{}", prev_x, prev_y);
 
         if prev_x == 0 && prev_y == 0 {
             return match self.piece_type {

@@ -59,9 +59,7 @@ impl DataLoader {
 
         self.input_tensors = input_tensors;
         self.label_tensors = label_tensors;
-
-   }
-
+    }
 }
 
 pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
@@ -69,37 +67,49 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
     let mut input_tensors: Vec<Tensor> = Vec::new();
 
     let csa_file_vector = csa::parse_csa_file();
-    let mut board = board::initialize_board();
-
-    let input_tensor = board.to_tensor();
 
     // println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
 
     let mut debug_count = 0;
 
-    for next_move in csa_file_vector[0].moves.iter() {
-        let mut stdin_handle = stdin().lock();
-        let mut byte = [0_u8];
+    let mut progress = 0;
 
-        // stdin_handle.read_exact(&mut byte).unwrap();
+    for csa_file in csa_file_vector {
+        progress += 1;
+        if progress % 10 == 0 {
+            println!("dataload progress: {}", progress)
+        }
 
-        print!("\x1B[2J\x1B[1;1H");
+        let mut board = board::initialize_board();
+        for next_move in csa_file.moves.iter() {
+            let mut stdin_handle = stdin().lock();
+            let mut byte = [0_u8];
 
-        println!("next move {:?}", next_move);
-        let label = next_move.to_label_tensor_2();
+            // stdin_handle.read_exact(&mut byte).unwrap();
 
-        // println!("label: {:?}", label);
+            // print!("\x1B[2J\x1B[1;1H");
 
-        label_tensors.push(label);
+            // println!("next move {:?}", next_move);
 
-        debug_count = debug_count + 1;
+            let label = next_move.to_label_tensor_2();
 
-        board = board.move_koma(&next_move);
+            // println!("label: {:?}", label);
 
-        let input_tensor = board.to_tensor();
-        board.pprint_board(&input_tensor);
-        input_tensors.push(input_tensor);
-        board.pprint();
+            label_tensors.push(label);
+
+            debug_count = debug_count + 1;
+
+            board = board.move_koma(&next_move);
+
+            let input_tensor = board.to_tensor();
+
+            // board.pprint_board(&input_tensor);
+
+            input_tensors.push(input_tensor);
+
+            // board.pprint();
+
+        }
     }
 
     return (input_tensors, label_tensors);

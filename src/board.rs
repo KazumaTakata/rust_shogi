@@ -236,7 +236,7 @@ impl Board {
 
         let tensor = Tensor::cat(&[&sente_tensor, &gote_tensor], 0).unwrap();
 
-        println!("tensor shape11: {:?}", tensor.shape().dims3());
+        // println!("tensor shape11: {:?}", tensor.shape().dims3());
 
         return tensor;
     }

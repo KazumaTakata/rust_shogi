@@ -28,9 +28,18 @@ pub fn parse_csa_file() -> Vec<CSAFile> {
     )
     .unwrap();
 
+
+    let mut progress = 0;
+
     for path in paths {
+        progress += 1;
+
+        if progress % 1000 == 0 {
+            println!("csa progress: {}", progress);
+        }
+
+
         let path = path.unwrap().path();
-        println!("Name: {}", path.display());
 
         let data = fs::read_to_string(path).expect("Unable to read file");
 
