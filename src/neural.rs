@@ -1,67 +1,58 @@
 use candle_core::{DType, Device, Result, Tensor, D};
-use candle_nn::batch_norm;
+use candle_nn::{batch_norm, Conv2dConfig};
 use candle_nn::{loss, ops, Conv2d, Linear, Module, ModuleT, Optimizer, VarBuilder, VarMap};
-
-// class ResNetBlock(nn.Module):
-//     def __init__(self, channels: int):
-//         super(ResNetBlock, self).__init__()
-//         self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False)
-//         self.bn1 = nn.BatchNorm2d(channels)
-//         self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=False)
-//         self.bn2 = nn.BatchNorm2d(channels)
-
-//     def forward(self, x: jaxtyping.Float[torch.Tensor, "1"]) -> torch.Tensor:
-//         out = self.conv1(x)
-//         out = self.bn1(out)
-//         out = F.relu(out)
-
-//         out = self.conv2(out)
-//         out = self.bn2(out)
-
-//         return F.relu(out + x)
 
 pub struct Resnet {
     conv1: Conv2d,
-    bn1: batch_norm::BatchNorm,
+    batch_norm1: batch_norm::BatchNorm,
     block: ResnetBlock,
     policy_conv: Conv2d,
 }
 
 impl Resnet {
     pub fn new(vs: VarBuilder) -> Result<Self> {
-        let nextmove_size = 100;
-        let channel_size = 104;
+        let channel_size = 192;
+        let input_channel_size = 104;
+        let move_channel_size = 2187;
 
-        let conv1 = candle_nn::conv2d(
+        let conv1 = candle_nn::conv2d_no_bias(
+            input_channel_size,
             channel_size,
-            nextmove_size,
-            1,
-            Default::default(),
+            3,
+            Conv2dConfig {
+                padding: 1,
+                stride: 1,
+                dilation: 1,
+                groups: 1,
+            },
             vs.pp("c1"),
         )?;
+
+        let batch_norm1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
+
+        let block = ResnetBlock::new(vs.clone(), channel_size)?;
 
         let policy_conv = candle_nn::conv2d(
             channel_size,
-            nextmove_size,
+            move_channel_size,
             1,
             Default::default(),
             vs.pp("c1"),
         )?;
 
-        let bn1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
-
-        let block = ResnetBlock::new(vs)?;
-
         Ok(Self {
             conv1,
-            bn1,
+            batch_norm1,
             block,
             policy_conv,
         })
     }
 
     pub fn forward(&self, xs: &Tensor, train: bool) -> Result<Tensor> {
-        let ys = xs.apply(&self.conv1)?.apply_t(&self.bn1, train)?.relu()?;
+        let ys = xs
+            .apply(&self.conv1)?
+            .apply_t(&self.batch_norm1, train)?
+            .relu()?;
         let ys = self.block.forward(&ys, train)?;
         let ys = self.policy_conv.forward(&ys)?;
         let ys = ys.flatten_all()?;
@@ -77,22 +68,30 @@ struct ResnetBlock {
 }
 
 impl ResnetBlock {
-    fn new(vs: VarBuilder) -> Result<Self> {
-        let channel_size = 10;
-
-        let conv1 = candle_nn::conv2d(
+    fn new(vs: VarBuilder, channel_size: usize) -> Result<Self> {
+        let conv1 = candle_nn::conv2d_no_bias(
             channel_size,
             channel_size,
             3,
-            Default::default(),
+            Conv2dConfig {
+                padding: 1,
+                stride: 1,
+                dilation: 1,
+                groups: 1,
+            },
             vs.pp("c1"),
         )?;
         let bn1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
-        let conv2 = candle_nn::conv2d(
+        let conv2 = candle_nn::conv2d_no_bias(
             channel_size,
             channel_size,
             3,
-            Default::default(),
+            Conv2dConfig {
+                padding: 1,
+                stride: 1,
+                dilation: 1,
+                groups: 1,
+            },
             vs.pp("c2"),
         )?;
         let bn2 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
