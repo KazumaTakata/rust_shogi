@@ -23,7 +23,7 @@ impl DataLoader {
         let mut label_tensors: Vec<Tensor> = Vec::new();
         let mut input_tensors: Vec<Tensor> = Vec::new();
 
-        let csa_file = csa::parse_csa_file();
+        let csa_file_vector = csa::parse_csa_file();
         let mut board = board::initialize_board();
 
         let input_tensor = board.to_tensor();
@@ -32,7 +32,7 @@ impl DataLoader {
 
         let mut debug_count = 0;
 
-        for next_move in csa_file.moves.iter() {
+        for next_move in csa_file_vector[0].moves.iter() {
             let mut stdin_handle = stdin().lock();
             let mut byte = [0_u8];
 
@@ -68,7 +68,7 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
     let mut label_tensors: Vec<Tensor> = Vec::new();
     let mut input_tensors: Vec<Tensor> = Vec::new();
 
-    let csa_file = csa::parse_csa_file();
+    let csa_file_vector = csa::parse_csa_file();
     let mut board = board::initialize_board();
 
     let input_tensor = board.to_tensor();
@@ -77,7 +77,7 @@ pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
 
     let mut debug_count = 0;
 
-    for next_move in csa_file.moves.iter() {
+    for next_move in csa_file_vector[0].moves.iter() {
         let mut stdin_handle = stdin().lock();
         let mut byte = [0_u8];
 
