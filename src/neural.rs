@@ -6,7 +6,10 @@ pub struct Resnet {
     conv1: Conv2d,
     batch_norm1: batch_norm::BatchNorm,
     block: ResnetBlock,
+    block2: ResnetBlock,
+    block3: ResnetBlock,
     policy_conv: Conv2d,
+    bias: Tensor,
 }
 
 impl Resnet {
@@ -31,6 +34,8 @@ impl Resnet {
         let batch_norm1 = batch_norm(channel_size, 1e-5, vs.pp("bn1"))?;
 
         let block = ResnetBlock::new(vs.clone(), channel_size)?;
+        let block2 = ResnetBlock::new(vs.clone(), channel_size)?;
+        let block3 = ResnetBlock::new(vs.clone(), channel_size)?;
 
         let policy_conv = candle_nn::conv2d(
             channel_size,
@@ -40,11 +45,16 @@ impl Resnet {
             vs.pp("c1"),
         )?;
 
+        let bias = Tensor::zeros(move_channel_size, DType::F32, &Device::Cpu)?;
+
         Ok(Self {
             conv1,
             batch_norm1,
             block,
+            block2,
+            block3,
             policy_conv,
+            bias,
         })
     }
 
@@ -53,9 +63,14 @@ impl Resnet {
             .apply(&self.conv1)?
             .apply_t(&self.batch_norm1, train)?
             .relu()?;
+
         let ys = self.block.forward(&ys, train)?;
+        let ys = self.block2.forward(&ys, train)?;
+        let ys = self.block3.forward(&ys, train)?;
+
         let ys = self.policy_conv.forward(&ys)?;
         let ys = ys.flatten_all()?;
+        let ys = (ys + &self.bias)?;
         return Ok(ys);
     }
 }
