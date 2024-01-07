@@ -9,10 +9,20 @@ use crate::csa;
 use crate::neural;
 use crate::piece_type;
 use crate::position;
-use crate::dataload;
+use crate::dataload::{self, DataLoader};
 
 
 pub fn train_neuralnet() {
+
+    let dataloader = DataLoader::new(8);
+    let dataloader = dataloader.load();
+    let dataloader = dataloader.shuffle();
+
+    let (batch_data, dataloader) = dataloader.get_batch();
+    
+
+
+
     let (input_tensors, label_tensors) = dataload::load_dataset();
 
     let mut varmap = VarMap::new();
