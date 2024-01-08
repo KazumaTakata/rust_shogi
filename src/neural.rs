@@ -14,7 +14,10 @@ pub struct Resnet {
 
 impl Resnet {
     pub fn new(vs: VarBuilder) -> Result<Self> {
-        let channel_size = 192;
+        // let channel_size = 192;
+        let channel_size = 19 * 10;
+
+
         let input_channel_size = 104;
         let move_channel_size = 27;
 
@@ -60,23 +63,32 @@ impl Resnet {
 
     pub fn forward(&self, xs: &Tensor, train: bool) -> Result<Tensor> {
         let ys = xs
+
             .apply(&self.conv1)?
+
             .apply_t(&self.batch_norm1, train)?
+
             .relu()?;
+
+        // println!("ys1: {:?}", ys.shape().dims());
 
         let ys = self.block.forward(&ys, train)?;
 
-        // let ys = self.block2.forward(&ys, train)?;
-        // let ys = self.block3.forward(&ys, train)?;
+        // println!("ys2: {:?}", ys.shape().dims());
+
+        let ys = self.block2.forward(&ys, train)?;
+        let ys = self.block3.forward(&ys, train)?;
 
         let ys = self.policy_conv.forward(&ys)?;
 
-        
+        let ys = ys.flatten_from(1)?;
 
+        // println!("ys3: {:?}", ys.shape().dims());
 
-        let ys = ys.flatten_all()?;
+        let ys = ys.broadcast_add(&self.bias)?;
 
-        let ys = (ys + &self.bias)?;
+        // println!("ys4: {:?}", ys.shape().dims());
+
 
         return Ok(ys);
     }
@@ -129,10 +141,14 @@ impl ResnetBlock {
     fn forward(&self, xs: &Tensor, train: bool) -> Result<Tensor> {
         let ys = xs
             .apply(&self.conv1)?
+
             .apply_t(&self.bn1, train)?
+
             .relu()?
             .apply(&self.conv2)?
+
             .apply_t(&self.bn2, train)?;
+
         let ys = (ys + xs)?.relu()?;
         return Ok(ys);
     }

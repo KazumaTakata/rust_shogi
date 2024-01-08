@@ -5,8 +5,9 @@ use candle_core::{DType, Device, Result, Tensor, D};
 use candle_nn::batch_norm;
 use candle_nn::{loss, ops, Conv2d, Linear, Module, ModuleT, Optimizer, VarBuilder, VarMap};
 use rand::seq::SliceRandom;
+use termion::input;
 
-use crate::board;
+use crate::board::{self, Teban};
 use crate::csa;
 use crate::neural;
 use crate::piece_type;
@@ -14,11 +15,9 @@ use crate::position;
 
 use std::io::{stdin, Read};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DataLoader {
-    input_tensors: Vec<Tensor>,
-    label_tensors: Vec<Tensor>,
-    batch_index: usize,
+    input_tensors: Vec<(Tensor, Tensor)>,
     batch_size: usize,
 }
 
@@ -26,8 +25,6 @@ impl DataLoader {
     pub fn new(batch_size: usize) -> Self {
         Self {
             input_tensors: Vec::new(),
-            label_tensors: Vec::new(),
-            batch_index: 0,
             batch_size: batch_size,
         }
     }
@@ -35,30 +32,35 @@ impl DataLoader {
     pub fn shuffle(mut self) -> Self {
         let mut rng = rand::thread_rng();
         self.input_tensors.shuffle(&mut rng);
-        self.label_tensors.shuffle(&mut rng);
         return self;
     }
 
-    pub fn get_batch(mut self) -> (Tensor, Self) {
-        println!("self.batch_index: {}", self.batch_index);
-        println!(
-            "self.batch_index+self.batch_size: {}",
-            self.batch_index + self.batch_size
-        );
+    pub fn get_batch(&self, start_index: usize) -> (Tensor, Tensor, usize) {
+        let end_index = start_index + self.batch_size;
 
-        let sliced_input_tensor =
-            &self.input_tensors[self.batch_index..(self.batch_index + self.batch_size)];
+        // println!("start_index: {}", start_index);
+        // println!("end_index: {}", end_index);
 
-        let concat_tensor = Tensor::cat(sliced_input_tensor, 0).unwrap();
+        let sliced_input_tensor = &self.input_tensors[start_index..end_index];
 
-        self.batch_index += self.batch_size;
+        let mut input_tensors = Vec::new();
+        let mut label_tensors = Vec::new();
 
-        return (concat_tensor, self);
+        for tensor_tuple in sliced_input_tensor {
+            input_tensors.push(&tensor_tuple.0);
+            label_tensors.push(&tensor_tuple.1);
+        }
+
+        let concat_tensor = Tensor::stack(&input_tensors, 0).unwrap();
+        let concat_label_tensor = Tensor::stack(&label_tensors, 0).unwrap();
+
+        let concat_label_tensor = concat_label_tensor.flatten_all().unwrap();
+
+        return (concat_tensor, concat_label_tensor, end_index);
     }
 
     pub fn load(mut self) -> Self {
         self.input_tensors = Vec::new();
-        self.label_tensors = Vec::new();
 
         let csa_file_vector = csa::parse_csa_file();
 
@@ -87,20 +89,15 @@ impl DataLoader {
                 // println!("next move {:?}", next_move);
 
                 let label = next_move.to_label_tensor_2();
-
+                let input_tensor = board.to_tensor();
                 // println!("label: {:?}", label);
-
-                self.label_tensors.push(label);
-
-                debug_count = debug_count + 1;
 
                 board = board.move_koma(&next_move);
 
-                let input_tensor = board.to_tensor();
-
-                // board.pprint_board(&input_tensor);
-
-                self.input_tensors.push(input_tensor);
+                if next_move.teban == Teban::Sente {
+                    // board.pprint_board(&input_tensor);
+                    self.input_tensors.push((input_tensor, label));
+                }
 
                 // board.pprint();
             }

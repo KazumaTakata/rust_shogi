@@ -35,6 +35,7 @@ pub fn parse_csa_file() -> Vec<CSAFile> {
         progress += 1;
 
         if progress % 1000 == 0 {
+            break;
             println!("csa progress: {}", progress);
         }
 
