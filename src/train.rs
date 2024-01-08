@@ -24,7 +24,7 @@ pub fn train_neuralnet() {
 
     let model = neural::Resnet::new(vs.clone()).unwrap();
 
-    // let mut opt = candle_nn::SGD::new(varmap.all_vars(), 0.05).unwrap();
+    let mut opt = candle_nn::SGD::new(varmap.all_vars(), 0.0).unwrap();
 
     let adamw_params = candle_nn::ParamsAdamW {
         lr: 0.01,

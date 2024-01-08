@@ -260,6 +260,7 @@ impl Board {
         }
         println!("");
 
+
         println!("先手:香");
         let pawn_vectors = &input_vector[1];
         for row_vectors in pawn_vectors {
@@ -337,14 +338,11 @@ impl Board {
         }
 
         for (position, piece_type) in board.iter() {
-            let (col, row) = position.to_tensor_index();
+            let (col, row) = position.to_tensor_index_with_teban(teban_for_rotate);
 
             let channel_index = self.to_tensor_channel_index(piece_type);
 
-            let vector_index = match teban_for_rotate {
-                Teban::Sente => 81 * channel_index + (col - 1) + (row - 1) * 9,
-                Teban::Gote => 81 * channel_index + (8 - col - 1) + (8 - row - 1) * 9,
-            };
+            let vector_index =  81 * channel_index + (col - 1) + (row - 1) * 9;
 
             zero_vec[vector_index as usize] = 1.0
         }

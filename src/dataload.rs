@@ -72,6 +72,7 @@ impl DataLoader {
 
         for csa_file in csa_file_vector {
             progress += 1;
+            println!("progress: {}", progress);
             if progress % 10 == 0 {
                 println!("dataload progress: {}", progress);
                 break;
@@ -79,6 +80,7 @@ impl DataLoader {
 
             let mut board = board::initialize_board();
             for next_move in csa_file.moves.iter() {
+
                 let mut stdin_handle = stdin().lock();
                 let mut byte = [0_u8];
 
@@ -91,13 +93,16 @@ impl DataLoader {
                 let label = next_move.to_label_tensor_2(&next_move.teban);
                 let input_tensor = board.to_tensor(&next_move.teban);
                 // println!("label: {:?}", label);
-
                 board = board.move_koma(&next_move);
 
-                // board.pprint_board(&input_tensor);
-                self.input_tensors.push((input_tensor, label));
 
                 // board.pprint();
+                // board.pprint_board(&input_tensor);
+
+
+                self.input_tensors.push((input_tensor, label));
+
+
             }
         }
 
