@@ -15,6 +15,8 @@ pub fn train_neuralnet() {
 
     let device_type = Device::cuda_if_available(0).unwrap();
 
+    println!("device_type: {:?}", device_type);
+
     let dataloader = DataLoader::new(8);
     let dataloader = dataloader.load(&device_type);
 
