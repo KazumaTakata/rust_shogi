@@ -12,15 +12,18 @@ use crate::piece_type;
 use crate::position;
 
 pub fn train_neuralnet() {
+
+    let device_type = Device::cuda_if_available(0).unwrap();
+
     let dataloader = DataLoader::new(8);
-    let dataloader = dataloader.load();
+    let dataloader = dataloader.load(&device_type);
 
     // let dataloader = dataloader.shuffle();
 
     // let (input_tensors, label_tensors) = dataload::load_dataset();
 
     let mut varmap = VarMap::new();
-    let vs = VarBuilder::from_varmap(&varmap, DType::F32, &Device::Cpu);
+    let vs = VarBuilder::from_varmap(&varmap, DType::F32, &device_type);
 
     let model = neural::Resnet::new(vs.clone()).unwrap();
 

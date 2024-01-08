@@ -35,7 +35,7 @@ impl Move {
     //     return tensor;
     // }
 
-    pub fn to_label_tensor_2(&self, teban: &Teban) -> Tensor {
+    pub fn to_label_tensor_2(&self, teban: &Teban, device_type: &Device) -> Tensor {
         let (next_x, next_y) = self.next_pos.to_tensor_index_with_teban(teban);
 
         let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
@@ -48,7 +48,7 @@ impl Move {
 
 
         let data: [u32; 1] = [index as u32];
-        let tensor = Tensor::new(&data, &Device::Cpu).unwrap();
+        let tensor = Tensor::new(&data, device_type).unwrap();
 
         return tensor;
     }

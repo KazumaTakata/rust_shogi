@@ -218,16 +218,16 @@ impl Board {
         }
     }
 
-    pub fn to_tensor(&self, teban: &Teban) -> Tensor {
-        let board_tensor = self.board_to_tensor(Teban::Sente, teban);
+    pub fn to_tensor(&self, teban: &Teban,  device_type: &Device) -> Tensor {
+        let board_tensor = self.board_to_tensor(Teban::Sente, teban, device_type);
 
-        let komadai_tensor = self.komadai_to_tensor(Teban::Sente);
+        let komadai_tensor = self.komadai_to_tensor(Teban::Sente, device_type);
 
         let sente_tensor = Tensor::cat(&[&board_tensor, &komadai_tensor], 0).unwrap();
 
-        let board_tensor = self.board_to_tensor(Teban::Gote, teban);
+        let board_tensor = self.board_to_tensor(Teban::Gote, teban, device_type);
 
-        let komadai_tensor = self.komadai_to_tensor(Teban::Gote);
+        let komadai_tensor = self.komadai_to_tensor(Teban::Gote, device_type);
 
         let gote_tensor = Tensor::cat(&[&board_tensor, &komadai_tensor], 0).unwrap();
 
@@ -322,7 +322,7 @@ impl Board {
         println!("");
     }
 
-    fn board_to_tensor(&self, teban: Teban, teban_for_rotate: &Teban) -> Tensor {
+    fn board_to_tensor(&self, teban: Teban, teban_for_rotate: &Teban, device_type: &Device) -> Tensor {
         let on_board_channel_size = 14;
 
         let vec_size = on_board_channel_size * 9 * 9;
@@ -348,14 +348,14 @@ impl Board {
         }
 
         let board_tensor =
-            Tensor::from_vec(zero_vec, (on_board_channel_size, 9, 9), &Device::Cpu).unwrap();
+            Tensor::from_vec(zero_vec, (on_board_channel_size, 9, 9), device_type).unwrap();
 
         return board_tensor;
     }
 
-    fn komadai_to_tensor(&self, teban: Teban) -> Tensor {
+    fn komadai_to_tensor(&self, teban: Teban, device_type: &Device) -> Tensor {
         // # hu < 18
-        let mut hu_tensor: Tensor = Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
+        let mut hu_tensor: Tensor = Tensor::ones((1, 9, 9), DType::F32, device_type).unwrap();
 
         let komadai = match teban {
             Teban::Gote => &self.gote_komadai,

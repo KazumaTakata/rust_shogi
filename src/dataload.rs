@@ -59,7 +59,7 @@ impl DataLoader {
         return (concat_tensor, concat_label_tensor, end_index);
     }
 
-    pub fn load(mut self) -> Self {
+    pub fn load(mut self, device_type: &Device) -> Self {
         self.input_tensors = Vec::new();
 
         let csa_file_vector = csa::parse_csa_file();
@@ -90,8 +90,8 @@ impl DataLoader {
 
                 // println!("next move {:?}", next_move);
 
-                let label = next_move.to_label_tensor_2(&next_move.teban);
-                let input_tensor = board.to_tensor(&next_move.teban);
+                let label = next_move.to_label_tensor_2(&next_move.teban, device_type);
+                let input_tensor = board.to_tensor(&next_move.teban, device_type);
                 // println!("label: {:?}", label);
                 board = board.move_koma(&next_move);
 
