@@ -88,16 +88,14 @@ impl DataLoader {
 
                 // println!("next move {:?}", next_move);
 
-                let label = next_move.to_label_tensor_2();
-                let input_tensor = board.to_tensor();
+                let label = next_move.to_label_tensor_2(&next_move.teban);
+                let input_tensor = board.to_tensor(&next_move.teban);
                 // println!("label: {:?}", label);
 
                 board = board.move_koma(&next_move);
 
-                if next_move.teban == Teban::Sente {
-                    // board.pprint_board(&input_tensor);
-                    self.input_tensors.push((input_tensor, label));
-                }
+                // board.pprint_board(&input_tensor);
+                self.input_tensors.push((input_tensor, label));
 
                 // board.pprint();
             }
@@ -107,56 +105,58 @@ impl DataLoader {
     }
 }
 
-pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
-    let mut label_tensors: Vec<Tensor> = Vec::new();
-    let mut input_tensors: Vec<Tensor> = Vec::new();
 
-    let csa_file_vector = csa::parse_csa_file();
 
-    // println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
+// pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
+//     let mut label_tensors: Vec<Tensor> = Vec::new();
+//     let mut input_tensors: Vec<Tensor> = Vec::new();
 
-    let mut debug_count = 0;
+//     let csa_file_vector = csa::parse_csa_file();
 
-    let mut progress = 0;
+//     // println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
 
-    for csa_file in csa_file_vector {
-        progress += 1;
-        if progress % 10 == 0 {
-            println!("dataload progress: {}", progress)
-        }
+//     let mut debug_count = 0;
 
-        let mut board = board::initialize_board();
-        for next_move in csa_file.moves.iter() {
-            let mut stdin_handle = stdin().lock();
-            let mut byte = [0_u8];
+//     let mut progress = 0;
 
-            // stdin_handle.read_exact(&mut byte).unwrap();
+//     for csa_file in csa_file_vector {
+//         progress += 1;
+//         if progress % 10 == 0 {
+//             println!("dataload progress: {}", progress)
+//         }
 
-            // print!("\x1B[2J\x1B[1;1H");
+//         let mut board = board::initialize_board();
+//         for next_move in csa_file.moves.iter() {
+//             let mut stdin_handle = stdin().lock();
+//             let mut byte = [0_u8];
 
-            // println!("next move {:?}", next_move);
+//             // stdin_handle.read_exact(&mut byte).unwrap();
 
-            let label = next_move.to_label_tensor_2();
+//             // print!("\x1B[2J\x1B[1;1H");
 
-            // println!("label: {:?}", label);
+//             // println!("next move {:?}", next_move);
 
-            label_tensors.push(label);
+//             let label = next_move.to_label_tensor_2();
 
-            debug_count = debug_count + 1;
+//             // println!("label: {:?}", label);
 
-            board = board.move_koma(&next_move);
+//             label_tensors.push(label);
 
-            let input_tensor = board.to_tensor();
+//             debug_count = debug_count + 1;
 
-            // board.pprint_board(&input_tensor);
+//             board = board.move_koma(&next_move);
 
-            input_tensors.push(input_tensor);
+//             let input_tensor = board.to_tensor();
 
-            // board.pprint();
-        }
-    }
+//             // board.pprint_board(&input_tensor);
 
-    return (input_tensors, label_tensors);
+//             input_tensors.push(input_tensor);
 
-    // let input_tensor = Tensor::rand(-1.0f32, 1.0, (1, 1, 28, 28), &Device::Cpu).unwrap();
-}
+//             // board.pprint();
+//         }
+//     }
+
+//     return (input_tensors, label_tensors);
+
+//     // let input_tensor = Tensor::rand(-1.0f32, 1.0, (1, 1, 28, 28), &Device::Cpu).unwrap();
+// }

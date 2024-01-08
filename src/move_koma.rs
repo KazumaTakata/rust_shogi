@@ -1,6 +1,7 @@
 use candle_core::{DType, Device, Tensor};
 
 use crate::board;
+use crate::board::Teban;
 use crate::neural;
 use crate::piece_type;
 use crate::position;
@@ -14,31 +15,32 @@ pub struct Move {
 }
 
 impl Move {
-    pub fn to_label_tensor(&self) -> Tensor {
-        let (next_x, next_y) = self.next_pos.to_tensor_index();
+
+    // pub fn to_label_tensor(&self, teban: &Teban) -> Tensor {
+    //     let (next_x, next_y) = self.next_pos.to_tensor_index_with_teban(teban);
+
+    //     let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
+
+    //     let move_direction: MoveDirection = self.csa_move_to_move_direction(teban);
+
+    //     // println!("move_direction {:?}", &move_direction);
+
+    //     let index = base_index + (move_direction as i32);
+
+    //     let mut zero_vec: Vec<f32> = vec![0.0; 81 * 27];
+    //     zero_vec[index as usize] = 1.0;
+
+    //     let tensor = Tensor::from_vec(zero_vec, 81 * 27, &Device::Cpu).unwrap();
+
+    //     return tensor;
+    // }
+
+    pub fn to_label_tensor_2(&self, teban: &Teban) -> Tensor {
+        let (next_x, next_y) = self.next_pos.to_tensor_index_with_teban(teban);
 
         let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
 
-        let move_direction: MoveDirection = self.csa_move_to_move_direction();
-
-        // println!("move_direction {:?}", &move_direction);
-
-        let index = base_index + (move_direction as i32);
-
-        let mut zero_vec: Vec<f32> = vec![0.0; 81 * 27];
-        zero_vec[index as usize] = 1.0;
-
-        let tensor = Tensor::from_vec(zero_vec, 81 * 27, &Device::Cpu).unwrap();
-
-        return tensor;
-    }
-
-    pub fn to_label_tensor_2(&self) -> Tensor {
-        let (next_x, next_y) = self.next_pos.to_tensor_index();
-
-        let base_index = 27 * ((next_x - 1) + (next_y - 1) * 9);
-
-        let move_direction: MoveDirection = self.csa_move_to_move_direction();
+        let move_direction: MoveDirection = self.csa_move_to_move_direction(teban);
 
         // println!("move_direction {:?}", &move_direction);
 
@@ -52,9 +54,9 @@ impl Move {
     }
 
 
-    fn csa_move_to_move_direction(&self) -> MoveDirection {
-        let (next_x, next_y) = self.next_pos.to_tensor_index();
-        let (prev_x, prev_y) = self.prev_pos.to_tensor_index();
+    fn csa_move_to_move_direction(&self, teban: &Teban) -> MoveDirection {
+        let (next_x, next_y) = self.next_pos.to_tensor_index_with_teban(teban);
+        let (prev_x, prev_y) = self.prev_pos.to_tensor_index_with_teban(teban);
 
         // println!("next_x, next_y = {},{}", next_x, next_y);
         // println!("prev_x, prev_y = {},{}", prev_x, prev_y);

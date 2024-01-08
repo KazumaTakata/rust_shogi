@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use crate::board::Teban;
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Position {
     SQ_00,
@@ -87,6 +89,19 @@ pub enum Position {
 }
 
 impl Position {
+    pub fn to_tensor_index_with_teban(&self, teban: &Teban) -> (i32, i32) {
+        let (x, y) = self.to_tensor_index();
+
+        if x == 0 && y == 0 {
+            return (0, 0)
+        }
+
+        return match teban {
+            Teban::Sente => (x, y),
+            Teban::Gote => (10 - x, 10 - y),
+        };
+    }
+
     pub fn to_tensor_index(&self) -> (i32, i32) {
         return match self {
             Position::SQ_00 => (0, 0),
@@ -181,7 +196,6 @@ impl Position {
             Position::SQ_9H => (9, 8),
             Position::SQ_9I => (9, 9),
         };
-
     }
 }
 

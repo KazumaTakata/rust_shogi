@@ -66,8 +66,6 @@ impl Board {
 
         println!("{:?}", self.sente_komadai);
         println!("{:?}", self.gote_komadai);
-
-
     }
 
     pub fn move_koma(mut self, move_koma: &move_koma::Move) -> Board {
@@ -103,7 +101,7 @@ impl Board {
                             &piece_type::PieceType::ProRook => self.gote_komadai.hi += 1,
 
                             &piece_type::PieceType::Gold => self.gote_komadai.ki += 1,
- 
+
                             &piece_type::PieceType::Silver => self.gote_komadai.gi += 1,
                             &piece_type::PieceType::ProSilver => self.gote_komadai.gi += 1,
 
@@ -164,7 +162,7 @@ impl Board {
                             &piece_type::PieceType::ProRook => self.sente_komadai.hi += 1,
 
                             &piece_type::PieceType::Gold => self.sente_komadai.ki += 1,
- 
+
                             &piece_type::PieceType::Silver => self.sente_komadai.gi += 1,
                             &piece_type::PieceType::ProSilver => self.sente_komadai.gi += 1,
 
@@ -176,7 +174,6 @@ impl Board {
 
                             &piece_type::PieceType::Pawn => self.sente_komadai.hu += 1,
                             &piece_type::PieceType::ProPawn => self.sente_komadai.hu += 1,
-
 
                             _ => {}
                         },
@@ -221,20 +218,23 @@ impl Board {
         }
     }
 
-    pub fn to_tensor(&self) -> Tensor {
-        let board_tensor = self.board_to_tensor(Teban::Sente);
+    pub fn to_tensor(&self, teban: &Teban) -> Tensor {
+        let board_tensor = self.board_to_tensor(Teban::Sente, teban);
 
         let komadai_tensor = self.komadai_to_tensor(Teban::Sente);
 
         let sente_tensor = Tensor::cat(&[&board_tensor, &komadai_tensor], 0).unwrap();
 
-        let board_tensor = self.board_to_tensor(Teban::Gote);
+        let board_tensor = self.board_to_tensor(Teban::Gote, teban);
 
         let komadai_tensor = self.komadai_to_tensor(Teban::Gote);
 
         let gote_tensor = Tensor::cat(&[&board_tensor, &komadai_tensor], 0).unwrap();
 
-        let tensor = Tensor::cat(&[&sente_tensor, &gote_tensor], 0).unwrap();
+        let tensor = match teban {
+            Teban::Sente => Tensor::cat(&[&sente_tensor, &gote_tensor], 0).unwrap(),
+            Teban::Gote => Tensor::cat(&[&gote_tensor, &sente_tensor], 0).unwrap(),
+        };
 
         // println!("tensor shape11: {:?}", tensor.shape().dims3());
 
@@ -242,7 +242,6 @@ impl Board {
     }
 
     pub fn pprint_board(&self, input_tensor: &Tensor) {
-
         // channel order
         // on_board = 14
         // hu, ky, ke, gi, ki, ka, hi, ou, pro_hu, pro_ky, pro_ke, pro_gi, pro_ka, pro_hi
@@ -254,7 +253,7 @@ impl Board {
         let pawn_vectors = &input_vector[0];
 
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
@@ -264,7 +263,7 @@ impl Board {
         println!("先手:香");
         let pawn_vectors = &input_vector[1];
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
@@ -274,7 +273,7 @@ impl Board {
         println!("先手:桂");
         let pawn_vectors = &input_vector[2];
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
@@ -284,18 +283,17 @@ impl Board {
         println!("先手:銀");
         let pawn_vectors = &input_vector[3];
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
         }
         println!("");
 
-
         println!("先手:持歩1");
         let pawn_vectors = &input_vector[14];
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
@@ -305,7 +303,7 @@ impl Board {
         println!("先手:持歩2");
         let pawn_vectors = &input_vector[15];
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
@@ -315,19 +313,15 @@ impl Board {
         println!("先手:持歩3");
         let pawn_vectors = &input_vector[16];
         for row_vectors in pawn_vectors {
-            for bit_value in row_vectors.iter().rev()  {
+            for bit_value in row_vectors.iter().rev() {
                 print!(" {} ", bit_value)
             }
             println!("");
         }
         println!("");
-
-
-
-
     }
 
-    fn board_to_tensor(&self, teban: Teban) -> Tensor {
+    fn board_to_tensor(&self, teban: Teban, teban_for_rotate: &Teban) -> Tensor {
         let on_board_channel_size = 14;
 
         let vec_size = on_board_channel_size * 9 * 9;
@@ -346,7 +340,11 @@ impl Board {
             let (col, row) = position.to_tensor_index();
 
             let channel_index = self.to_tensor_channel_index(piece_type);
-            let vector_index = 81 * channel_index + (col - 1) + (row - 1) * 9;
+
+            let vector_index = match teban_for_rotate {
+                Teban::Sente => 81 * channel_index + (col - 1) + (row - 1) * 9,
+                Teban::Gote => 81 * channel_index + (8 - col - 1) + (8 - row - 1) * 9,
+            };
 
             zero_vec[vector_index as usize] = 1.0
         }
