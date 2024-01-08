@@ -27,7 +27,7 @@ pub fn train_neuralnet() {
     let mut varmap = VarMap::new();
     let vs = VarBuilder::from_varmap(&varmap, DType::F32, &device_type);
 
-    let model = neural::Resnet::new(vs.clone()).unwrap();
+    let model = neural::Resnet::new(vs.clone(), &device_type).unwrap();
 
     let mut opt = candle_nn::SGD::new(varmap.all_vars(), 0.0).unwrap();
 

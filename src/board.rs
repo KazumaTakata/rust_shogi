@@ -379,16 +379,16 @@ impl Board {
                 if i == 0 && j_flag == 0 {
                     j_flag = 1;
                     if i < in_komadai.0 {
-                        hu_tensor = Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
+                        hu_tensor = Tensor::ones((1, 9, 9), DType::F32, device_type).unwrap();
                     } else {
-                        hu_tensor = Tensor::zeros((1, 9, 9), DType::F32, &Device::Cpu).unwrap();
+                        hu_tensor = Tensor::zeros((1, 9, 9), DType::F32, device_type).unwrap();
                     }
                 } else {
                     if i < in_komadai.0 {
                         hu_tensor = Tensor::cat(
                             &[
                                 &hu_tensor,
-                                &Tensor::ones((1, 9, 9), DType::F32, &Device::Cpu).unwrap(),
+                                &Tensor::ones((1, 9, 9), DType::F32, device_type).unwrap(),
                             ],
                             0,
                         )
@@ -397,7 +397,7 @@ impl Board {
                         hu_tensor = Tensor::cat(
                             &[
                                 &hu_tensor,
-                                &Tensor::zeros((1, 9, 9), DType::F32, &Device::Cpu).unwrap(),
+                                &Tensor::zeros((1, 9, 9), DType::F32, device_type).unwrap(),
                             ],
                             0,
                         )

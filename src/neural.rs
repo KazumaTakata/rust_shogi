@@ -13,7 +13,7 @@ pub struct Resnet {
 }
 
 impl Resnet {
-    pub fn new(vs: VarBuilder) -> Result<Self> {
+    pub fn new(vs: VarBuilder, device_type: &Device) -> Result<Self> {
         // let channel_size = 192;
         let channel_size = 19 * 10;
 
@@ -48,7 +48,7 @@ impl Resnet {
             vs.pp("nesnet-policyconv"),
         )?;
 
-        let bias = Tensor::zeros(move_channel_size * 81, DType::F32, &Device::Cpu)?;
+        let bias = Tensor::zeros(move_channel_size * 81, DType::F32, device_type)?;
 
         Ok(Self {
             conv1,
