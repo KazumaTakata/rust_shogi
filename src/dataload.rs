@@ -8,24 +8,123 @@ use rand::seq::SliceRandom;
 use termion::input;
 
 use crate::board::{self, Teban};
-use crate::csa;
+use crate::csa::{self, CSAFile};
 use crate::neural;
 use crate::piece_type;
 use crate::position;
 
 use std::io::{stdin, Read};
 
+use std::{
+    sync::{mpsc, Arc, Mutex},
+    thread,
+};
+
+pub struct ThreadPool {
+    workers: Vec<Worker>,
+    sender: mpsc::SyncSender<Message>,
+    result: Arc<Mutex<Vec<(Tensor, Tensor)>>>,
+}
+
+struct Worker {
+    id: usize,
+    thread: thread::JoinHandle<()>,
+}
+
+struct Message {
+    message: String,
+    csa_file: CSAFile,
+}
+
+impl ThreadPool {
+    // --snip--
+    pub fn new(size: usize, device_type: Device) -> ThreadPool {
+        assert!(size > 0);
+
+        let input_tensor = Arc::new(Mutex::new(Vec::new()));
+
+        let (sender, receiver) = mpsc::sync_channel(0);
+
+        let mut workers = Vec::with_capacity(size);
+
+        let receiver = Arc::new(Mutex::new(receiver));
+
+        for id in 0..size {
+            workers.push(Worker::new(
+                id,
+                Arc::clone(&receiver),
+                Arc::clone(&input_tensor),
+                device_type.clone(),
+            ));
+        }
+
+        ThreadPool {
+            workers: workers,
+            sender: sender,
+            result: input_tensor,
+        }
+    }
+    // --snip--
+}
+
+// --snip--
+
+impl Worker {
+    fn new(
+        id: usize,
+        receiver: Arc<Mutex<mpsc::Receiver<Message>>>,
+        result: Arc<Mutex<Vec<(Tensor, Tensor)>>>,
+        device_type: Device,
+    ) -> Worker {
+        let thread = thread::spawn(move || loop {
+            let message = receiver.lock().unwrap().recv();
+
+            match message {
+                Ok(message) => {
+                    let csa_file = message.csa_file;
+
+                    let mut temp_input_tensor = vec![];
+
+                    let mut board = board::initialize_board();
+                    for next_move in csa_file.moves.iter() {
+                        let label = next_move.to_label_tensor_2(&next_move.teban, &device_type);
+                        let input_tensor = board.to_tensor(&next_move.teban, &device_type);
+                        // println!("label: {:?}", label);
+
+                        board = board.move_koma(&next_move);
+
+                        temp_input_tensor.push((input_tensor, label));
+
+                        // board.pprint();
+                        // board.pprint_board(&input_tensor);
+                    }
+
+                    result.lock().unwrap().append(&mut temp_input_tensor);
+                }
+                Err(_) => {
+                    println!("Worker {id} disconnected; shutting down.");
+                    break;
+                }
+            }
+        });
+
+        Worker { id, thread }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct DataLoader {
-    input_tensors: Vec<(Tensor, Tensor)>,
+    pub input_tensors: Vec<(Tensor, Tensor)>,
     batch_size: usize,
+    device_type: Device,
 }
 
 impl DataLoader {
-    pub fn new(batch_size: usize) -> Self {
+    pub fn new(batch_size: usize, device_type: Device) -> Self {
         Self {
             input_tensors: Vec::new(),
             batch_size: batch_size,
+            device_type: device_type,
         }
     }
 
@@ -59,109 +158,46 @@ impl DataLoader {
         return (concat_tensor, concat_label_tensor, end_index);
     }
 
-    pub fn load(mut self, device_type: &Device) -> Self {
-        self.input_tensors = Vec::new();
+    pub fn load(mut self, device_type: Device) -> Self {
+        let thread_pool = ThreadPool::new(8, device_type);
 
         let csa_file_vector = csa::parse_csa_file();
 
         // println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
 
-        let mut debug_count = 0;
-
         let mut progress = 0;
 
         for csa_file in csa_file_vector {
+            let message = Message {
+                csa_file: csa_file,
+                message: "message1".to_string(),
+            };
+
+            thread_pool.sender.send(message).unwrap();
+
             progress += 1;
             println!("progress: {}", progress);
-            if progress % 10 == 0 {
-                println!("dataload progress: {}", progress);
-                break;
-            }
 
-            let mut board = board::initialize_board();
-            for next_move in csa_file.moves.iter() {
-
-                let mut stdin_handle = stdin().lock();
-                let mut byte = [0_u8];
-
-                // stdin_handle.read_exact(&mut byte).unwrap();
-
-                // print!("\x1B[2J\x1B[1;1H");
-
-                // println!("next move {:?}", next_move);
-
-                let label = next_move.to_label_tensor_2(&next_move.teban, device_type);
-                let input_tensor = board.to_tensor(&next_move.teban, device_type);
-                // println!("label: {:?}", label);
-                board = board.move_koma(&next_move);
-
-
-                // board.pprint();
-                // board.pprint_board(&input_tensor);
-
-
-                self.input_tensors.push((input_tensor, label));
-
-
-            }
+            // if progress % 10 == 0 {
+            //     println!("dataload progress: {}", progress);
+            //     break;
+            // }
         }
+
+        
+        drop(thread_pool.sender);
+
+        for worker in thread_pool.workers {
+            worker.thread.join().unwrap();
+        }
+        
+
+
+        self.input_tensors = Arc::try_unwrap(thread_pool.result)
+            .unwrap()
+            .into_inner()
+            .unwrap();
 
         return self;
     }
 }
-
-
-
-// pub fn load_dataset() -> (Vec<Tensor>, Vec<Tensor>) {
-//     let mut label_tensors: Vec<Tensor> = Vec::new();
-//     let mut input_tensors: Vec<Tensor> = Vec::new();
-
-//     let csa_file_vector = csa::parse_csa_file();
-
-//     // println!("tensor shape: {:?}", board.to_tensor().shape().dims3());
-
-//     let mut debug_count = 0;
-
-//     let mut progress = 0;
-
-//     for csa_file in csa_file_vector {
-//         progress += 1;
-//         if progress % 10 == 0 {
-//             println!("dataload progress: {}", progress)
-//         }
-
-//         let mut board = board::initialize_board();
-//         for next_move in csa_file.moves.iter() {
-//             let mut stdin_handle = stdin().lock();
-//             let mut byte = [0_u8];
-
-//             // stdin_handle.read_exact(&mut byte).unwrap();
-
-//             // print!("\x1B[2J\x1B[1;1H");
-
-//             // println!("next move {:?}", next_move);
-
-//             let label = next_move.to_label_tensor_2();
-
-//             // println!("label: {:?}", label);
-
-//             label_tensors.push(label);
-
-//             debug_count = debug_count + 1;
-
-//             board = board.move_koma(&next_move);
-
-//             let input_tensor = board.to_tensor();
-
-//             // board.pprint_board(&input_tensor);
-
-//             input_tensors.push(input_tensor);
-
-//             // board.pprint();
-//         }
-//     }
-
-//     return (input_tensors, label_tensors);
-
-//     // let input_tensor = Tensor::rand(-1.0f32, 1.0, (1, 1, 28, 28), &Device::Cpu).unwrap();
-// }

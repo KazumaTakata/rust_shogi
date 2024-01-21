@@ -28,17 +28,16 @@ pub fn parse_csa_file() -> Vec<CSAFile> {
     )
     .unwrap();
 
-
     let mut progress = 0;
 
     for path in paths {
         progress += 1;
+        println!("csa progress: {}", progress);
 
-        if progress % 1000 == 0 {
+        if progress % 2000 == 0 {
             break;
             println!("csa progress: {}", progress);
         }
-
 
         let path = path.unwrap().path();
 

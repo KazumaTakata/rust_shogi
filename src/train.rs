@@ -15,10 +15,15 @@ pub fn train_neuralnet() {
 
     let device_type = Device::cuda_if_available(0).unwrap();
 
-    println!("device_type: {:?}", device_type);
+    println!("device_type: {:?}", device_type.clone());
 
-    let dataloader = DataLoader::new(8);
-    let dataloader = dataloader.load(&device_type);
+    let dataloader = DataLoader::new(8, device_type.clone());
+
+    let dataloader = dataloader.load(device_type.clone());
+
+    println!("dataloader.input_tensors.len(): {}", dataloader.input_tensors.len());
+
+    
 
     // let dataloader = dataloader.shuffle();
 
